@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title>Causal Discovery</title>
+{% endblock %}
+
+{% block body %}
+<div class="content">
+    <h1 style="text-align: center">Causal Discovery Graph Generator</h1>
+    <!-- {% if tasks|length < 1 %} -->
+    <!-- {% else %} -->
+<!-- <table>
+        <tr>
+            <th>Data</th>
+            <th>Added</th>
+            <th>Actions</th>
+        </tr>
+        {% for task in tasks %}
+            <tr>
+                <td>{{ task.content }}</td>
+                <td>{{ task.date_created.date() }}</td>
+                <td>
+                    <a href="/delete/{{task.id}}">Delete</a>
+                    <br>
+                    <a href="/update/{{task.id}}">Update</a>
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+
+    <div class="form">
+        <form action="/" method="POST">
+            <input type="text" name="content" id="content">
+            <input type="submit" value="Add Task">
+        </form>
+    </div>
+-->   
+    <div class = "upload">
+        <h4>Upload your own dataset below:</h4>
+        </br>
+        <form action = "http://localhost:5000/uploader" method = "POST" 
+         enctype = "multipart/form-data">
+         <input type = "file" name = "file" />
+         <input type = "submit"/>
+      </form> 
+      <br><br>  
+    </div>
+    
+
+    <div class="dropdown">
+        <iframe id="invisible" name="invisible" style="display:none;"></iframe>
+        <form method="POST" action="/run_script" target = "invisible">
+            <label for="datasets" style = "font-weight: bold;">Or choose an existing dataset:</label>
+            <select name="datasets" id="datasets">
+              <option value="adult">Adult</option>
+              <option value="boston">Boston</option>
+              <option value="census">Dutch Census</option>
+              <option value="compas">Compas</option>
+              <option value="cards">Credit Cards</option>
+              <option value="crimes">Crime rates</option>
+              <option value="fico">FICO</option>
+              <option value="lalonde">La Londe</option>
+              <option value="lawschool">Law School</option>
+              <option value="police">Police Arrest</option>
+            </select>
+            <br><br>
+            <br>
+            <label for="algorithm" style = "font-weight: bold;">Now, choose the algorithm:</label>
+            <select name="algorithm" id="algorithm">
+              <option value="pc_gcastle">PC Gcastle</option>
+              <option value="pc_causal">PC CausalLearn</option>
+              <option value="ges_gcastle">GES Gcastle</option>
+              <option value="ges_causal">GES CausalLearn</option>
+            </select>
+            <br><br>
+            <br>
+            <div class = "generate" style = "text-align: center;">
+                <input type="submit" value="Generate">
+          </form>
+          
+      </div>
+      <div class = "generated_image">
+        <img src="{{ url_for('static', filename = 'image.png') }}" style="text-align: center">
+      </div>
+
+    
+    </div>
+      
+</div>
+{% endblock %}
+
