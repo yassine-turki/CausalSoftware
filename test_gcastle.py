@@ -122,8 +122,8 @@ def draw_graph(graph, labels, filename=None): # Draw the pydot graph
   if filename==None:
     display(Image(png_data))
   else:
-    if filename[-3:]!="png" and filename[-3:]!="jpeg" and filename[-3:]!="pdf":
-      filename+=".png"
+    if not filename.lower().endswith((".png", ".jpeg", ".pdf")):
+      filename += ".png"
     with open(filename, "wb") as f:
       f.write(png_data)
 

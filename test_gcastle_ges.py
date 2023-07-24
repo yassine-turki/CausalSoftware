@@ -39,7 +39,7 @@ def load_and_check_data(file_path, dropna=False, drop_objects=False):
   Returns an np array of the values in the dataframe, and a list of labels
   """
 
-  data=pd.read_csv(file_path,index_col=0)
+  data=pd.read_csv(file_path)
   cols_containing_nan = []
 
   # Check for NaN values in each column

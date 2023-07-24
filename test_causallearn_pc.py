@@ -40,7 +40,7 @@ def load_and_check_data(file_path, dropna=False, drop_objects=False):
 
   """
 
-  data=pd.read_csv(file_path,index_col=0)
+  data=pd.read_csv(file_path)
   cols_containing_nan = []
 
   # Check for NaN values in each column
@@ -158,14 +158,9 @@ def draw_graph(graph, labels, filename=None):
     graph.draw_pydot_graph(labels = labels)
   else:
     pyd = GraphUtils.to_pydot(graph.G, labels = labels)
-    if filename[-3:]=="png":
-      pyd.write_png(filename)
-    elif filename[-4:]=="jpeg":
-      pyd.write_jpeg(filename)
-    elif filename[-3:]=="pdf":
-      pyd.write_png(filename)
-    else:
-      pyd.write_png(filename+".png")
+    if not filename.lower().endswith((".png", ".jpeg", ".pdf")):
+      filename += ".png"
+    pyd.write_png(filename)
 """
 def delete_path(graph, labels, path_to_delete):
 
