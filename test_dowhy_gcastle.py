@@ -352,19 +352,19 @@ draw_graph(g, labels,filename = "newgraph.png")
 #Now, we want to print all metrics (ATT, ATC, ATE) for the path "sex" -> education (this path needs to be specified by the user)
 dict_of_estimates = {"ATT":0, "ATC":0, "ATE":0}
 #ATT
-model = create_model(g, df, treatment = "sex", outcome = "occupation", estimand_type = "nonparametric-att")
+model = create_model(g, df, treatment = "sex", outcome = "occupation", estimand_type = "nonparametric-ate")
 id = find_effect(model)
-estimate = compute_effect(model, id, continuous_outcome = False, target_units = "att")
+estimate = compute_effect(model, id, method_name = "backdoor.propensity_score_stratification", continuous_outcome = False, target_units = "att")
 dict_of_estimates["ATT"]=estimate.value
 #ATC
-model = create_model(g, df, treatment = "sex", outcome = "occupation", estimand_type = "nonparametric-atc")
+model = create_model(g, df, treatment = "sex", outcome = "occupation", estimand_type = "nonparametric-ate")
 id = find_effect(model)
-estimate = compute_effect(model, id, continuous_outcome = False, target_units = "atc")
+estimate = compute_effect(model, id, method_name = "backdoor.propensity_score_stratification", continuous_outcome = False, target_units = "atc")
 dict_of_estimates["ATC"]=estimate.value
 #ATE
 model = create_model(g, df, treatment = "sex", outcome = "occupation", estimand_type = "nonparametric-ate")
 id = find_effect(model)
-estimate = compute_effect(model, id, continuous_outcome = False, target_units = "ate")
+estimate = compute_effect(model, id, method_name = "backdoor.propensity_score_stratification", continuous_outcome = False, target_units = "ate")
 dict_of_estimates["ATE"]=estimate.value
 
 print(dict_of_estimates)
