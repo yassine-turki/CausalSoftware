@@ -157,10 +157,11 @@ def draw_graph(graph, labels, filename=None):
   if filename==None:
     graph.draw_pydot_graph(labels = labels)
   else:
-    pyd = GraphUtils.to_pydot(graph.G, labels = labels)
+    pyd = GraphUtils.to_pydot(graph.G, labels = labels).create_png()
     if not filename.lower().endswith((".png", ".jpeg", ".pdf")):
       filename += ".png"
-    pyd.write_png(filename)
+    with open(filename, "wb") as f:
+      f.write(pyd)
 """
 def delete_path(graph, labels, path_to_delete):
 

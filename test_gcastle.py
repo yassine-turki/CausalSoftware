@@ -107,25 +107,60 @@ def run_pc(data, labels, variant="original", alpha=0.05, ci_test="fisherz", prio
   pc.learn(data)
   return pc
 
-def draw_graph(graph, labels, filename=None): # Draw the pydot graph
+def draw_graph(graph, labels, filename=None):
+    learned_graph = nx.DiGraph(graph.causal_matrix)
+    learned_graph.add_nodes_from(learned_graph.nodes())
+    learned_graph.add_edges_from(learned_graph.edges())
 
-  learned_graph = nx.DiGraph(graph.causal_matrix)
-  learned_graph.add_nodes_from(learned_graph.nodes())
-  learned_graph.add_edges_from(learned_graph.edges())
+    mapping = {i: labels[i] for i in learned_graph.nodes()}
+    learned_graph = nx.relabel_nodes(learned_graph, mapping)
+    pos = nx.circular_layout(learned_graph)
 
-  mapping = {i: labels[i] for i in learned_graph.nodes()}
-  learned_graph = nx.relabel_nodes(learned_graph, mapping)
-  pos = nx.circular_layout(learned_graph)
+    pydot_graph = nx.drawing.nx_pydot.to_pydot(learned_graph)
 
-  pydot_graph = nx.drawing.nx_pydot.to_pydot(learned_graph)
-  png_data = pydot_graph.create_png()
-  if filename==None:
-    display(Image(png_data))
-  else:
-    if not filename.lower().endswith((".png", ".jpeg", ".pdf")):
-      filename += ".png"
-    with open(filename, "wb") as f:
-      f.write(png_data)
+    # Create a mapping of node names to indices for the adjacency matrix
+    node_name_to_index = {label: index for index, label in mapping.items()}
+    adjacency_matrix = graph.causal_matrix
+    path_set = set()
+
+    # List to store edges to remove
+    edges_to_remove = []
+
+    # Identify and remove duplicate undirected edges
+    for edge in pydot_graph.get_edges():
+        src_node_name = edge.get_source()
+        dst_node_name = edge.get_destination()
+
+        # Convert node names to indices using the mapping
+        src_idx = node_name_to_index[src_node_name]
+        dst_idx = node_name_to_index[dst_node_name]
+
+        if adjacency_matrix[src_idx][dst_idx] == 1 and adjacency_matrix[dst_idx][src_idx] == 1:
+            # Check if the undirected path has already been encountered
+            if (src_idx, dst_idx) in path_set or (dst_idx, src_idx) in path_set:
+                # Mark the edge for removal
+                edges_to_remove.append((src_node_name, dst_node_name))
+                continue
+            else:
+                # Mark the undirected path as encountered
+                path_set.add((src_idx, dst_idx))
+
+            # Set the edge to be undirected (without arrowhead) and dashed
+            edge.set_arrowhead("none")
+            edge.set_style("dashed")
+
+    # Remove the duplicate undirected edges from the PyDot graph
+    for src, dst in edges_to_remove:
+        pydot_graph.del_edge(src, dst)
+
+    png_data = pydot_graph.create_png()
+    if filename is None:
+        display(Image(png_data))
+    else:
+        if not filename.lower().endswith((".png", ".jpeg", ".pdf")):
+            filename += ".png"
+        with open(filename, "wb") as f:
+            f.write(png_data)
 
 def delete_path(graph, labels, path_to_delete):
 
