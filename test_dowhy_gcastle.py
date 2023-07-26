@@ -334,37 +334,110 @@ def compute_effect(model, identified_estimand,
         method_params=method_params
     )
 
+def compute_estimates_dowhy(g, data_file_path, treatment, outcome, method_name):
+  """
+  Computes the ATT, ATC, and ATE of a given causal relation (treatment -> outcome)
+  g: a causal graph object
+  data_file_path : a csv file (data)
+  treatment : treatment variable name
+  outcome : outcome variable name
+  method_name : from compute_effect function : 
+  * Propensity Score Matching: "backdoor.propensity_score_matching"
+  * Propensity Score Stratification: "backdoor.propensity_score_stratification"
+  * Propensity Score-based Inverse Weighting: "backdoor.propensity_score_weighting"
+  * Linear Regression: "backdoor.linear_regression"
+  * Generalized Linear Models (e.g., logistic regression): "backdoor.generalized_linear_model"
+  * Instrumental Variables: "iv.instrumental_variable"
+  * Regression Discontinuity: "iv.regression_discontinuity"
+
+  """
+  df = pd.read_csv(data_file_path)
+  #Now, we want to print all metrics (ATT, ATC, ATE) for the path "sex" -> education (this path needs to be specified by the user)
+  dict_of_estimates = {"ATT":0, "ATC":0, "ATE":0}
+  #ATT
+  model = create_model(g, df, treatment = treatment, outcome = outcome, estimand_type = "nonparametric-ate")
+  estimate_att = compute_effect(model, id, method_name = method_name, continuous_outcome = False, target_units = "att")
+  dict_of_estimates["ATT"]=estimate_att.value
+  #ATC
+  estimate_atc = compute_effect(model, id, method_name = method_name, continuous_outcome = False, target_units = "atc")
+  dict_of_estimates["ATC"]=estimate_atc.value
+  #ATE
+  estimate_ate = compute_effect(model, id, method_name = method_name, continuous_outcome = False, target_units = "ate")
+  dict_of_estimates["ATE"]=estimate_ate.value
+  
+  return dict_of_estimates
+
+def compute_direct_effect_dowhy(g, data, treatment, outcome):
+
+  """ Computes the direct effect from the treatment to the outcome
+  # g : an adjacency matrix
+  # data : a pandas dataframe
+  # treatment : the treatment variable
+  # outcome : the outcome variable
+
+  """
+  model = create_model(g, data, treatment = treatment, outcome = outcome, estimand_type = "nonparametric-nde")
+
+  identified_estimand_nde = model.identify_effect(estimand_type="nonparametric-nde",
+                                              proceed_when_unidentifiable=True)
+
+  causal_estimate_nde = model.estimate_effect(identified_estimand_nde,
+                                          method_name="mediation.two_stage_regression",
+                                        confidence_intervals=False,
+                                        test_significance=False,
+                                          method_params = {
+                                              'first_stage_model': dowhy.causal_estimators.linear_regression_estimator.LinearRegressionEstimator,
+                                              'second_stage_model': dowhy.causal_estimators.linear_regression_estimator.LinearRegressionEstimator
+                                          }
+                                        )
+  return causal_estimate_nde.value
+
+def compute_indirect_effect_dowhy(g, data, treatment, outcome):
+
+  """ Computes the direct effect from the treatment to the outcome
+  # g : an adjacency matrix
+  # data : a pandas dataframe
+  # treatment : the treatment variable
+  # outcome : the outcome variable
+
+  """
+  model = create_model(g, data, treatment = treatment, outcome = outcome, estimand_type = "nonparametric-nie")
+
+  identified_estimand_nie = model.identify_effect(estimand_type="nonparametric-nie",
+                                              proceed_when_unidentifiable=True)
+
+  causal_estimate_nie = model.estimate_effect(identified_estimand_nie,
+                                          method_name="mediation.two_stage_regression",
+                                        confidence_intervals=False,
+                                        test_significance=False,
+                                          method_params = {
+                                              'first_stage_model': dowhy.causal_estimators.linear_regression_estimator.LinearRegressionEstimator,
+                                              'second_stage_model': dowhy.causal_estimators.linear_regression_estimator.LinearRegressionEstimator
+                                          }
+                                        )
+  return causal_estimate_nie.value
+
 
 ################################################################################################################################################################
 
 #How to use the code
 
 #Load data
-file_path="dutch_simplified2.csv"
-dataset, labels = load_and_check_data(file_path)
-df = pd.read_csv(file_path)
+data_file_path="dutch_simplified2.csv"
+dataset, labels = load_and_check_data(data_file_path)
+dowhy_data = pd.read_csv(data_file_path)
 
 #Run PC and get a causalgraph
 g=run_pc(dataset,labels)
 draw_graph(g, labels,filename = "newgraph.png")
 
-
-#Now, we want to print all metrics (ATT, ATC, ATE) for the path "sex" -> education (this path needs to be specified by the user)
-dict_of_estimates = {"ATT":0, "ATC":0, "ATE":0}
-#ATT
-model = create_model(g, df, treatment = "sex", outcome = "occupation", estimand_type = "nonparametric-ate")
-id = find_effect(model)
-estimate = compute_effect(model, id, method_name = "backdoor.propensity_score_stratification", continuous_outcome = False, target_units = "att")
-dict_of_estimates["ATT"]=estimate.value
-#ATC
-model = create_model(g, df, treatment = "sex", outcome = "occupation", estimand_type = "nonparametric-ate")
-id = find_effect(model)
-estimate = compute_effect(model, id, method_name = "backdoor.propensity_score_stratification", continuous_outcome = False, target_units = "atc")
-dict_of_estimates["ATC"]=estimate.value
-#ATE
-model = create_model(g, df, treatment = "sex", outcome = "occupation", estimand_type = "nonparametric-ate")
-id = find_effect(model)
-estimate = compute_effect(model, id, method_name = "backdoor.propensity_score_stratification", continuous_outcome = False, target_units = "ate")
-dict_of_estimates["ATE"]=estimate.value
-
+#Now, we want to print all metrics (ATT, ATC, ATE) for the path "sex" -> "occupation" (this path needs to be specified by the user)
+dict_of_estimates = compute_estimates_dowhy(g, data_file_path, treatment = "sex", outcome = "occupation", method_name = "backdoor.propensity_score_stratification")
 print(dict_of_estimates)
+
+#Let's also compute the direct and indirect effect from "edu_level" to "economic_status"
+
+direct_effect = compute_direct_effect_dowhy(g, dowhy_data, treatment = "edu_level", outcome = "economic_status")
+indirect_effect = compute_indirect_effect_dowhy(g, dowhy_data, treatment = "edu_level", outcome = "economic_status")
+print("Direct effect =", direct_effect)
+print("Indirect effect =", indirect_effect)
