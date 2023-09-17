@@ -33,7 +33,7 @@ def load_and_check_data(file_path, dropna=False, drop_objects=False):
 
   """
 
-  data=pd.read_csv(file_path)
+  data=pd.read_csv(file_path,index_col=0)
   cols_containing_nan = []
 
   # Check for NaN values in each column
@@ -103,14 +103,21 @@ def draw_graph_ges(graph, labels, filename=None):
   labels: data.columns
   filename: if you wish to save the file
   """
-  pyd = GraphUtils.to_pydot(graph['G'], labels = labels).create_png()
+
+
+  pyd = GraphUtils.to_pydot(graph['G'], labels = labels)
   if filename==None:
-    display(Image(pyd))
+    png_data = pyd.create_png()
+    display(Image(png_data))
   else:
-    if not filename.lower().endswith((".png", ".jpeg", ".pdf")):
-      filename += ".png"
-    with open(filename, "wb") as f:
-      f.write(pyd)
+    if filename[-3:]=="png":
+      pyd.write_png(filename)
+    elif filename[-4:]=="jpeg":
+      pyd.write_jpeg(filename)
+    elif filename[-3:]=="pdf":
+      pyd.write_png(filename)
+    else:
+      pyd.write_png(filename+".png")
 """
 def delete_path_ges(graph, labels, path_to_delete):
 
@@ -185,7 +192,7 @@ def run_ges_and_draw(file_path_data, score_func = "local_score_BIC", maxP = None
 file_path= sys.argv[1]
 data, labels = load_and_check_data(file_path)
 Record = ges(data)
-draw_graph_ges(Record, labels)
+draw_graph_ges(Record, labels, "static\image.png")
 
 #g = delete_path(Record, labels, ["native_country", "race"])
 

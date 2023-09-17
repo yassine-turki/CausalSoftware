@@ -30,6 +30,7 @@ from castle.common.priori_knowledge import PrioriKnowledge
 import matplotlib.pyplot as plt
 import pygraphviz
 import sys
+import json
 
 """Useful functions"""
 
@@ -39,7 +40,7 @@ def load_and_check_data(file_path, dropna=False, drop_objects=False):
   Returns an np array of the values in the dataframe, and a list of labels
   """
 
-  data=pd.read_csv(file_path)
+  data=pd.read_csv(file_path,index_col=0)
   cols_containing_nan = []
 
   # Check for NaN values in each column
@@ -88,42 +89,49 @@ def run_ges(data, criterion='bic', method='scatter', k=0.001, N=10):
     N: int, default: 10
         prior equivalent sample size, effective when `criterion='bdeu'`
   """
+  graph_operations_list = []
+  if len(sys.argv) > 2 and len(sys.argv[2]) > 0:
+    graph_operations_list = json.loads(sys.argv[2])
+  if len(graph_operations_list) > 0:
+     print(graph_operations_list)
+     for i in range(len(graph_operations_list)): 
+        if graph_operations_list[i]["op"] == "add":
+          add_path(ges, labels, [graph_operations_list[i]["start"], graph_operations_list[i]["end"]])
+        if graph_operations_list[i]["op"] == "delete":
+          delete_path(ges, labels, [graph_operations_list[i]["start"], graph_operations_list[i]["end"]])
 
   ges = GES(criterion = criterion, method = method, k = k, N = N)
   ges.learn(data)
   return ges
 
 def draw_graph(graph, labels, filename=None):
-    learned_graph = nx.DiGraph(graph.causal_matrix)
-    learned_graph.add_nodes_from(learned_graph.nodes())
-    learned_graph.add_edges_from(learned_graph.edges())
+  adjacency_matrix = graph.causal_matrix
+  learned_graph = nx.DiGraph()
+  undirected_paths = set() # Set to check if we have undirected_paths
 
-    mapping = {i: str(labels[i]) for i in learned_graph.nodes()}  # Convert labels to strings
-    learned_graph = nx.relabel_nodes(learned_graph, mapping)
-    pos = nx.circular_layout(learned_graph)
+  # Add directed edges based on the condition
+  for i in range(len(adjacency_matrix)):
+    for j in range(len(adjacency_matrix[0])):
+      if adjacency_matrix[i][j] == 1 and adjacency_matrix[j][i] == 0:
+        learned_graph.add_edge(labels[i], labels[j])
+      elif (adjacency_matrix[i][j] == 1 and adjacency_matrix[j][i] == 1) and ((labels[i],labels[j]) not in undirected_paths and (labels[j],labels[i]) not in undirected_paths):
+        learned_graph.add_edge(labels[i], labels[j], style="dashed", arrowhead="none")
+        undirected_paths.add((labels[i],labels[j]))
 
-    agraph = nx.drawing.nx_agraph.to_agraph(learned_graph)
-    png_data = agraph.draw(format="png", prog="dot")
+  pos = nx.circular_layout(learned_graph)
+  pydot_graph = nx.drawing.nx_pydot.to_pydot(learned_graph)
 
-    if filename is None:
-        display(Image(png_data))
-    else:
-        if not filename.lower().endswith((".png", ".jpeg", ".pdf")):
-            filename += ".png"
-        with open(filename, "wb") as f:
-            f.write(png_data)
-"""
+  png_data = pydot_graph.create_png()
+  if filename is None:
+    with open("graph.png", "wb") as f:
+      f.write(png_data)
+  else:
+    if not filename.lower().endswith((".png", ".jpeg", ".pdf")):
+      filename += ".png"
+    with open(filename, "wb") as f:
+      f.write(png_data)
+
 def delete_path(graph, labels, path_to_delete):
-
-  
-
-  graph is a CausalGraph object
-
-  labels: labels of the dataset
-
-  path_to_delete: a list containing two nodes. For example ["Sex","Race"]. This will delete the path from "Sex" to "Race"
-
-  
 
   column_to_index = {col: i for i, col in enumerate(labels)}
   if path_to_delete[0] not in column_to_index.keys() or path_to_delete[1] not in column_to_index.keys():
@@ -140,16 +148,6 @@ def delete_path(graph, labels, path_to_delete):
 
 def add_path(graph, labels, path_to_add):
 
-  
-
-  graph is a CausalGraph object
-
-  labels: labels of the dataset
-
-  path_to_add: a list containing two nodes. For example ["Sex","Race"]. This will add the path from "Sex" to "Race"
-
-  
-
   column_to_index = {col: i for i, col in enumerate(labels)}
   if path_to_add[0] not in column_to_index.keys() or path_to_add[1] not in column_to_index.keys():
     print("Error: given path is not in the labels for the data")
@@ -164,16 +162,10 @@ def add_path(graph, labels, path_to_add):
   # pc.causal_matrix[node2_to_disconnect, node1_to_disconnect] = 0
 
   return graph
-"""
-"""Example : Adult_cleaned_bin"""
 
 file_path= sys.argv[1] 
 data, labels = load_and_check_data(file_path)
 ges = run_ges(data)
-draw_graph(ges, labels, "ges.png")
-
-draw_graph(algo,labels)
-
-ges = add_path(ges, labels, ["workclass", "relationship"])
+draw_graph(ges, labels, "static\image.png")
 
 draw_graph(ges, labels)

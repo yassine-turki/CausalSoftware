@@ -40,7 +40,7 @@ def load_and_check_data(file_path, dropna=False, drop_objects=False):
 
   """
 
-  data=pd.read_csv(file_path)
+  data=pd.read_csv(file_path,index_col=0)
   cols_containing_nan = []
 
   # Check for NaN values in each column
@@ -157,11 +157,15 @@ def draw_graph(graph, labels, filename=None):
   if filename==None:
     graph.draw_pydot_graph(labels = labels)
   else:
-    pyd = GraphUtils.to_pydot(graph.G, labels = labels).create_png()
-    if not filename.lower().endswith((".png", ".jpeg", ".pdf")):
-      filename += ".png"
-    with open(filename, "wb") as f:
-      f.write(pyd)
+    pyd = GraphUtils.to_pydot(graph.G, labels = labels)
+    if filename[-3:]=="png":
+      pyd.write_png(filename)
+    elif filename[-4:]=="jpeg":
+      pyd.write_jpeg(filename)
+    elif filename[-3:]=="pdf":
+      pyd.write_png(filename)
+    else:
+      pyd.write_png(filename+".png")
 """
 def delete_path(graph, labels, path_to_delete):
 
@@ -242,13 +246,13 @@ pc_with_background_knowledge=run_pc_and_draw(file_path,background_knowledge=back
 
 """Now, we want to delete the path from income to race"""
 
-pc_with_background_knowledge=delete_path(pc_with_background_knowledge, labels, ["income","race"])
-draw_graph(pc_with_background_knowledge, labels, filename=None)
+#pc_with_background_knowledge=delete_path(pc_with_background_knowledge, labels, ["income","race"])
+draw_graph(pc_with_background_knowledge, labels, "static\image.png")
 
 """Now, we we want to add a path from relationship to occupation"""
 
-pc_with_background_knowledge=add_path(pc_with_background_knowledge, labels, ["relationship","occupation"])
-draw_graph(pc_with_background_knowledge, labels, filename=None)
+#pc_with_background_knowledge=add_path(pc_with_background_knowledge, labels, ["relationship","occupation"])
+#draw_graph(pc_with_background_knowledge, labels, "static\image.png")
 
 """# This is old and only kept here for future reference"""
 

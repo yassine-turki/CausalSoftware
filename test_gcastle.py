@@ -29,8 +29,12 @@ from castle.algorithms import PC, GES, ICALiNGAM, GOLEM
 from castle.common.priori_knowledge import PrioriKnowledge
 
 import matplotlib.pyplot as plt
+import dowhy
+from dowhy import CausalModel
+from graphviz import Digraph
 
 import sys
+import json
 
 file_path = sys.argv[1] 
 """Get the data"""
@@ -107,60 +111,32 @@ def run_pc(data, labels, variant="original", alpha=0.05, ci_test="fisherz", prio
   pc.learn(data)
   return pc
 
-def draw_graph(graph, labels, filename=None):
-    learned_graph = nx.DiGraph(graph.causal_matrix)
-    learned_graph.add_nodes_from(learned_graph.nodes())
-    learned_graph.add_edges_from(learned_graph.edges())
+def draw_graph(graph, labels, filename=None): # Draw the pydot graph
 
-    mapping = {i: labels[i] for i in learned_graph.nodes()}
-    learned_graph = nx.relabel_nodes(learned_graph, mapping)
-    pos = nx.circular_layout(learned_graph)
+  adjacency_matrix = graph.causal_matrix
+  learned_graph = nx.DiGraph()
+  undirected_paths = set() # Set to check if we have undirected_paths
 
-    pydot_graph = nx.drawing.nx_pydot.to_pydot(learned_graph)
+  # Add directed edges based on the condition
+  for i in range(len(adjacency_matrix)):
+    for j in range(len(adjacency_matrix[0])):
+      if adjacency_matrix[i][j] == 1 and adjacency_matrix[j][i] == 0:
+        learned_graph.add_edge(labels[i], labels[j])
+      elif (adjacency_matrix[i][j] == 1 and adjacency_matrix[j][i] == 1) and ((labels[i],labels[j]) not in undirected_paths and (labels[j],labels[i]) not in undirected_paths):
+        learned_graph.add_edge(labels[i], labels[j], style="dashed", arrowhead="none")
+        undirected_paths.add((labels[i],labels[j]))
 
-    # Create a mapping of node names to indices for the adjacency matrix
-    node_name_to_index = {label: index for index, label in mapping.items()}
-    adjacency_matrix = graph.causal_matrix
-    path_set = set()
+  pos = nx.circular_layout(learned_graph)
+  pydot_graph = nx.drawing.nx_pydot.to_pydot(learned_graph)
 
-    # List to store edges to remove
-    edges_to_remove = []
-
-    # Identify and remove duplicate undirected edges
-    for edge in pydot_graph.get_edges():
-        src_node_name = edge.get_source()
-        dst_node_name = edge.get_destination()
-
-        # Convert node names to indices using the mapping
-        src_idx = node_name_to_index[src_node_name]
-        dst_idx = node_name_to_index[dst_node_name]
-
-        if adjacency_matrix[src_idx][dst_idx] == 1 and adjacency_matrix[dst_idx][src_idx] == 1:
-            # Check if the undirected path has already been encountered
-            if (src_idx, dst_idx) in path_set or (dst_idx, src_idx) in path_set:
-                # Mark the edge for removal
-                edges_to_remove.append((src_node_name, dst_node_name))
-                continue
-            else:
-                # Mark the undirected path as encountered
-                path_set.add((src_idx, dst_idx))
-
-            # Set the edge to be undirected (without arrowhead) and dashed
-            edge.set_arrowhead("none")
-            edge.set_style("dashed")
-
-    # Remove the duplicate undirected edges from the PyDot graph
-    for src, dst in edges_to_remove:
-        pydot_graph.del_edge(src, dst)
-
-    png_data = pydot_graph.create_png()
-    if filename is None:
-        display(Image(png_data))
-    else:
-        if not filename.lower().endswith((".png", ".jpeg", ".pdf")):
-            filename += ".png"
-        with open(filename, "wb") as f:
-            f.write(png_data)
+  png_data = pydot_graph.create_png()
+  if filename==None:
+    display(Image(png_data))
+  else:
+    if filename[-3:]!="png" and filename[-3:]!="jpeg" and filename[-3:]!="pdf":
+      filename+=".png"
+    with open(filename, "wb") as f:
+      f.write(png_data)
 
 def delete_path(graph, labels, path_to_delete):
 
@@ -219,168 +195,28 @@ def add_path(graph, labels, path_to_add):
 def run_pc_and_draw(file_path_data, variant="original", alpha=0.05, ci_test="fisherz", priori_knowledge=None, filename_graph = None):
   dataset, labels = load_and_check_data(file_path_data)
   g=run_pc(dataset, labels = labels, alpha=alpha, ci_test=ci_test, priori_knowledge = priori_knowledge)
+
+  graph_operations_list = []
+  if len(sys.argv) > 2 and len(sys.argv[2]) > 0:
+    graph_operations_list = json.loads(sys.argv[2])
+
+  if len(graph_operations_list) > 0:
+     print(graph_operations_list)
+     for i in range(len(graph_operations_list)): 
+        if graph_operations_list[i]["op"] == "add":
+          add_path(g, labels, [graph_operations_list[i]["start"], graph_operations_list[i]["end"]])
+        if graph_operations_list[i]["op"] == "delete":
+          delete_path(g, labels, [graph_operations_list[i]["start"], graph_operations_list[i]["end"]])
+   # add_path(g, labels, [sys.argv[2], sys.argv[3]])
+  #if len(sys.argv) > 2 and sys.argv[4] and len(sys.argv[4]) > 1 and sys.argv[5] and len(sys.argv[5]):
+   # delete_path(g, labels, [sys.argv[4], sys.argv[5]])
   draw_graph(g, labels, filename_graph)
   return g
 
-#file_path="adult_cleaned_bin.csv"
+
 p=run_pc_and_draw(file_path, "original", 0.05, "fisherz", None, "static/image")
 
 """Now let's say we want to add background knowledge and put "income" in **Tier 1** and "marital status, race" in **Tier 2**"""
 
-#file_path="adult_cleaned_bin.csv"
 _,labels=load_and_check_data(file_path)
-#background = [["income"], ["marital_status", "race"]]
-#pc_with_background_knowledge=run_pc_and_draw(file_path,priori_knowledge=background)
 
-"""Now, we want to delete the path from income to race"""
-
-#pc_with_background_knowledge=delete_path(pc_with_background_knowledge, labels, ["income","race"])
-#draw_graph(pc_with_background_knowledge, labels, filename=None)
-
-"""Now, we we want to add a path from education to workclass"""
-
-#pc_with_background_knowledge=add_path(pc_with_background_knowledge, labels, ["education","workclass"])
-#draw_graph(pc_with_background_knowledge, labels, filename=None)
-
-"""
-# This is old and only kept for future reference
-
-data
-
-## PC Algorithm
-
-x=data.columns[data.isna().any()].tolist()
-
-pc = PC()
-pc.learn(dataset)
-
-learned_graph = nx.DiGraph(pc.causal_matrix)
-learned_graph.add_nodes_from(learned_graph.nodes())
-learned_graph.add_edges_from(learned_graph.edges())
-
-# Relabel the nodes with column names
-column_names = data.columns
-mapping = {i: column_names[i] for i in learned_graph.nodes()}
-learned_graph = nx.relabel_nodes(learned_graph, mapping)
-pos = nx.circular_layout(learned_graph)
-
-pydot_graph = nx.drawing.nx_pydot.to_pydot(learned_graph)
-
-# Print the pydot graph
-png_data = pydot_graph.create_png()
-display(Image(png_data))
-
-#Draw the graph:
-
-pydot_graph = pydot.Dot(graph_type='digraph')
-
-# Add nodes to the pydot graph
-for node in learned_graph.nodes():
-    pydot_node = pydot.Node(node)
-    pydot_graph.add_node(pydot_node)
-
-# Add edges to the pydot graph
-for edge in learned_graph.edges():
-    pydot_edge = pydot.Edge(edge[0], edge[1])
-    pydot_graph.add_edge(pydot_edge)
-
-# Set node positions for layout
-for node, pos in pos.items():
-    pydot_node = pydot_graph.get_node(node)[0]
-    pydot_node.set_pos(f"{pos[0]},{pos[1]}")
-
-
-# pydot_graph.write_png('learned_graph.png') # If you want to save the graph, uncomment this
-png_data = pydot_graph.create_png()
-display(Image(png_data))
-
-# Adding Background Knowledge
-
-(for example, we don't want any correlation between "workclass" and "Sex")
-
-
-#Building priori knowledge object
-
-priori = PrioriKnowledge(data.shape[1])
-priori.add_forbidden_edge(data.columns.get_loc("Sex"), data.columns.get_loc("workclass"))
-priori.add_forbidden_edge(data.columns.get_loc("workclass"), data.columns.get_loc("Sex"))
-
-#Training a new PC Algorithm
-pc = PC(priori_knowledge=priori)
-pc.learn(dataset)
-learned_graph = nx.DiGraph(pc.causal_matrix)
-learned_graph.add_nodes_from(learned_graph.nodes())
-learned_graph.add_edges_from(learned_graph.edges())
-
-# Relabel the nodes with column names
-column_names = data.columns
-mapping = {i: column_names[i] for i in learned_graph.nodes()}
-learned_graph = nx.relabel_nodes(learned_graph, mapping)
-pos = nx.circular_layout(learned_graph)
-
-#Drawing new graph
-
-pydot_graph = pydot.Dot(graph_type='digraph')
-
-# Add nodes to the pydot graph
-for node in learned_graph.nodes():
-    pydot_node = pydot.Node(node)
-    pydot_graph.add_node(pydot_node)
-
-# Add edges to the pydot graph
-for edge in learned_graph.edges():
-    pydot_edge = pydot.Edge(edge[0], edge[1])
-    pydot_graph.add_edge(pydot_edge)
-
-# Set node positions for layout
-for node, pos in pos.items():
-    pydot_node = pydot_graph.get_node(node)[0]
-    pydot_node.set_pos(f"{pos[0]},{pos[1]}")
-
-
-# pydot_graph.write_png('learned_graph.png') # If you want to save the graph, uncomment this
-png_data = pydot_graph.create_png()
-display(Image(png_data))
-
-If the user wants to delete an edge, we modify the tensor data structure and generate new graph
-
-column_to_index = {col: i for i, col in enumerate(data.columns)}
-node1_to_disconnect = column_to_index['Sex']
-node2_to_disconnect = column_to_index['race']
-# Remove edge from node1 to node2
-pc.causal_matrix[node1_to_disconnect, node2_to_disconnect] = 0
-# Remove edge from node2 to node1, if it exists (uncomment the line below if you want that)
-# pc.causal_matrix[node2_to_disconnect, node1_to_disconnect] = 0
-
-learned_graph = nx.DiGraph(pc.causal_matrix)
-learned_graph.add_nodes_from(learned_graph.nodes())
-learned_graph.add_edges_from(learned_graph.edges())
-
-# Relabel the nodes with column names
-column_names = data.columns
-mapping = {i: column_names[i] for i in learned_graph.nodes()}
-learned_graph = nx.relabel_nodes(learned_graph, mapping)
-pos = nx.circular_layout(learned_graph)
-
-pydot_graph = pydot.Dot(graph_type='digraph')
-
-# Add nodes to the pydot graph
-for node in learned_graph.nodes():
-    pydot_node = pydot.Node(node)
-    pydot_graph.add_node(pydot_node)
-
-# Add edges to the pydot graph
-for edge in learned_graph.edges():
-    pydot_edge = pydot.Edge(edge[0], edge[1])
-    pydot_graph.add_edge(pydot_edge)
-
-# Set node positions for layout
-for node, pos in pos.items():
-    pydot_node = pydot_graph.get_node(node)[0]
-    pydot_node.set_pos(f"{pos[0]},{pos[1]}")
-
-
-# pydot_graph.write_png('learned_graph.png') # If you want to save the graph, uncomment this
-png_data = pydot_graph.create_png()
-display(Image(png_data))
-"""
