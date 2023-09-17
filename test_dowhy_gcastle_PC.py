@@ -616,7 +616,7 @@ g=run_pc(dataset,labels)
 #draw_graph(g, labels, filename = "ref")
 
 # Compute ATE, ATC, ATT
-dict_of_estimates = compute_estimates_dowhy(g,dowhy_data, treatment = sys.argv[3], outcome = sys.argv[4], method_name = "backdoor.generalized_linear_model")
+dict_of_estimates = compute_estimates_dowhy(g,dowhy_data, treatment = sys.argv[3], outcome = sys.argv[4], method_name = sys.argv[6])
 print(dict_of_estimates)
 #Compute Direct Effect
 direct_effect = compute_direct_effect_dowhy(g, dowhy_data, treatment = sys.argv[3], outcome = sys.argv[4], estimator = sys.argv[5])
