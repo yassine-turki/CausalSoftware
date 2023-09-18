@@ -153,13 +153,13 @@ def run_script():
     print(dataset_path)
 
     if userdata["algorithm"] == "pc_gcastle":    
-        subprocess.Popen([python_bin, 'test_gcastle.py', dataset_path + userdata["dataset"] + ".csv", json.dumps(userdata["graph_operations"])]).wait()
+        subprocess.Popen([python_bin, 'generate_graph.py', dataset_path + userdata["dataset"] + ".csv", "pc_gcastle", json.dumps(userdata["graph_operations"])]).wait()
     elif userdata["algorithm"] == "pc_causal":
-        subprocess.Popen([python_bin, 'test_causallearn_pc.py', dataset_path + userdata["dataset"] + ".csv", json.dumps(userdata["graph_operations"])]).wait()
+        subprocess.Popen([python_bin, 'generate_graph.py', dataset_path + userdata["dataset"] + ".csv", "pc_causal", json.dumps(userdata["graph_operations"])]).wait()
     elif userdata["algorithm"] == "ges_gcastle":
-        subprocess.Popen([python_bin, 'test_gcastle_ges.py', dataset_path + userdata["dataset"] + ".csv", json.dumps(userdata["graph_operations"])]).wait()
+        subprocess.Popen([python_bin, 'generate_graph.py', dataset_path + userdata["dataset"] + ".csv", "ges_gcastle", json.dumps(userdata["graph_operations"])]).wait()
     elif userdata["algorithm"] == "ges_causal":
-        subprocess.Popen([python_bin, 'test_causallearn_ges.py', dataset_path + userdata["dataset"] + ".csv", json.dumps(userdata["graph_operations"])]).wait()
+        subprocess.Popen([python_bin, 'generate_graph.py', dataset_path + userdata["dataset"] + ".csv", "ges_causal", json.dumps(userdata["graph_operations"])]).wait()
     else:
         print("Option doesn't exist.")
 
@@ -208,13 +208,13 @@ def run_metrics():
     dataset_path = app.config['DATASET_FOLDER'] + "\\" + userdata["dataset"] + "\\"
     
     if userdata["algorithm"] == "pc_gcastle" and userdata["library_metrics"] == "dowhy":    
-        subprocess.Popen([python_bin, 'test_dowhy_gcastle_PC.py', dataset_path + userdata["dataset"] + ".csv", userdata["treatment"], userdata["outcome"], userdata["estimator"]]).wait()
+        subprocess.Popen([python_bin, 'dowhy_file.py', dataset_path + userdata["dataset"] + ".csv", userdata["treatment"], userdata["outcome"], userdata["estimator"], userdata["method_name"]]).wait()
     elif userdata["algorithm"] == "pc_causal":
-        subprocess.Popen([python_bin, 'test_causallearn_pc.py', dataset_path + userdata["dataset"] + ".csv", json.dumps(userdata["graph_operations"])]).wait()
+        subprocess.Popen([python_bin, 'dowhy_file.py', dataset_path + userdata["dataset"] + ".csv", userdata["treatment"], userdata["outcome"], userdata["estimator"], userdata["method_name"]]).wait()
     elif userdata["algorithm"] == "ges_gcastle":
-        subprocess.Popen([python_bin, 'test_gcastle_ges.py', dataset_path + userdata["dataset"] + ".csv", json.dumps(userdata["graph_operations"])]).wait()
+        subprocess.Popen([python_bin, 'dowhy_file.py', dataset_path + userdata["dataset"] + ".csv", userdata["treatment"], userdata["outcome"], userdata["estimator"], userdata["method_name"]]).wait()
     elif userdata["algorithm"] == "ges_causal":
-        subprocess.Popen([python_bin, 'test_causallearn_ges.py', dataset_path + userdata["dataset"] + ".csv", json.dumps(userdata["graph_operations"])]).wait()
+        subprocess.Popen([python_bin, 'dowhy_file.py', dataset_path + userdata["dataset"] + ".csv", userdata["treatment"], userdata["outcome"], userdata["estimator"], userdata["method_name"]]).wait()
     else:
         print("Option doesn't exist.")
 

@@ -9,10 +9,10 @@ Original file is located at
 # Imports
 """
 
-!pip install dowhy
-!pip install causal-learn
-!sudo apt-get install python3-dev graphviz libgraphviz-dev pkg-config
-!sudo pip install pygraphviz
+# !pip install dowhy
+# !pip install causal-learn
+# !sudo apt-get install python3-dev graphviz libgraphviz-dev pkg-config
+# !sudo pip install pygraphviz
 
 from causallearn.search.ScoreBased.GES import ges
 from causallearn.utils.GraphUtils import GraphUtils

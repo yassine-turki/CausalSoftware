@@ -14,7 +14,7 @@ import os
 os.environ['CASTLE_BACKEND'] = 'pytorch'
 
 from collections import OrderedDict
-
+from common.load_data import load_and_check_data
 import numpy as np
 import networkx as nx
 import pandas as pd
@@ -42,33 +42,7 @@ file_path = sys.argv[1]
 #Loads dataset and checks if there are any NaN values and non numerical data
 #Returns an np array of the values in the dataframe, and a list of labels
 
-def load_and_check_data(file_path, dropna=False, drop_objects=False):
-  data=pd.read_csv(file_path)
-  cols_containing_nan = []
 
-  # Check for NaN values in each column
-  for col in data.columns:
-      if data[col].isnull().any():
-          cols_containing_nan.append(col)
-  if len(cols_containing_nan) !=0:
-    print("Columns with missing values:", cols_containing_nan)
-    if dropna==False:
-      print("Please remove missing values, or set dropna to True")
-      return None
-    else:
-      data=data.dropna()
-
-  #Check for non numerical data:
-
-  object_columns = data.select_dtypes(include=['object']).columns
-  if len(object_columns) > 0:
-    print("Columns of object type found:", object_columns)
-    if drop_objects==False:
-      print("Please remove non numerical data, or set drop_objects to True")
-    else:
-      data=data.drop(columns=object_columns)
-
-  return data.values, data.columns
 
 def run_pc(data, labels, variant="original", alpha=0.05, ci_test="fisherz", priori_knowledge=None):
   """
@@ -215,6 +189,7 @@ def run_pc_and_draw(file_path_data, variant="original", alpha=0.05, ci_test="fis
 
 
 p=run_pc_and_draw(file_path, "original", 0.05, "fisherz", None, "static/image")
+print("hahahahha")
 
 """Now let's say we want to add background knowledge and put "income" in **Tier 1** and "marital status, race" in **Tier 2**"""
 
