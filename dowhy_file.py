@@ -42,21 +42,7 @@ def adjacency_matrix_to_gml(graph_list, labels):
     algorithm_used = graph_list[0]
     graph = graph_list[1] 
 
-    if algorithm_used == "pc_gcastle":
-        matrix = graph.causal_matrix
-        G = nx.DiGraph()
-        for n in labels:
-            G.add_node(n)
-        for i in range(len(matrix)):
-            for j in range(len(matrix[0])):
-                if matrix[i][j]==1 and matrix[j][i]==1:
-                    continue
-                elif matrix[i][j]==1:
-                    G.add_edge(labels[i],labels[j])
-        gml = list(nx.generate_gml(G))
-        return gml
-
-    elif algorithm_used == "ges_gcastle":
+    if algorithm_used == "pc_gcastle" or algorithm_used == "ges_gcastle":
         matrix = graph.causal_matrix
         G = nx.DiGraph()
         for n in labels:
@@ -70,22 +56,11 @@ def adjacency_matrix_to_gml(graph_list, labels):
         gml = list(nx.generate_gml(G))
         return gml
     
-    elif algorithm_used == "pc_causal":
-        matrix = graph.G.graph
-        G = nx.DiGraph()
-        for n in labels:
-            G.add_node(n)
-        for i in range(len(matrix)):
-            for j in range(len(matrix[0])):
-                if (matrix[i][j]== 1 and matrix[j][i]== 1) or (matrix[i][j]== -1 and matrix[j][i]== -1):
-                    continue
-                elif matrix[i][j]== -1 and matrix[j][i]== 1:
-                    G.add_edge(labels[i],labels[j])
-        gml = list(nx.generate_gml(G))
-        return gml
-    
-    elif algorithm_used == "ges_causal":
-        matrix = graph['G'].graph 
+    elif algorithm_used == "pc_causal" or algorithm_used == "ges_causal":
+        if algorithm_used == "pc_causal":
+            matrix = graph.G.graph
+        elif algorithm_used == "ges_causal":
+            matrix = graph['G'].graph 
         G = nx.DiGraph()
         for n in labels:
             G.add_node(n)
@@ -308,6 +283,10 @@ def compute_direct_effect_dowhy(graph_list, data, treatment, outcome, estimator 
 
     identified_estimand_nde = model.identify_effect(estimand_type="nonparametric-nde",
                                                 proceed_when_unidentifiable=True)
+    if len(identified_estimand_nde.get_mediator_variables()) == 0 :  #If there is no mediator
+        print("No mediator between treatment and outcome found, NDE is equal to ATE")
+        return 
+                                                
 
     if estimator == "distance_matching_estimator":
         causal_estimator = dowhy.causal_estimators.distance_matching_estimator.DistanceMatchingEstimator

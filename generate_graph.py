@@ -47,8 +47,6 @@ from causal_learn_graph_generators.pc_causal_learn import run_pc_causal_learn
 from causal_learn_graph_generators.ges_causal_learn import run_ges_causal_learn
 
 
-
-
 def draw_graph(graph_list, labels, filename=None):
     """
     Draw the pydot graph
@@ -71,102 +69,28 @@ def draw_graph(graph_list, labels, filename=None):
             if graph_operations_list[i]["op"] == "delete":
                 delete_path(graph_list, labels, [graph_operations_list[i]["start"], graph_operations_list[i]["end"]])
 
-    #PC gcastle
-
-    if algorithm_used == "pc_gcastle":
-        adjacency_matrix = graph.causal_matrix
-        learned_graph = nx.DiGraph()
-        undirected_paths = set() # Set to check if we have undirected_paths
-
-        # Add directed edges based on the condition
-        for i in range(len(adjacency_matrix)):
-            for j in range(len(adjacency_matrix[0])):
-                if adjacency_matrix[i][j] == 1 and adjacency_matrix[j][i] == 0:
-                    learned_graph.add_edge(labels[i], labels[j])
-                elif (adjacency_matrix[i][j] == 1 and adjacency_matrix[j][i] == 1) and ((labels[i],labels[j]) not in undirected_paths and (labels[j],labels[i]) not in undirected_paths):
-                    learned_graph.add_edge(labels[i], labels[j], style="dashed", arrowhead="none")
-                    undirected_paths.add((labels[i],labels[j]))
-
-        pos = nx.circular_layout(learned_graph)
-        pydot_graph = nx.drawing.nx_pydot.to_pydot(learned_graph)
-
-        png_data = pydot_graph.create_png()
-        if filename is None:
-            with open("graph.png", "wb") as f:
-                f.write(png_data)
-        else:
-            if not filename.lower().endswith((".png", ".jpeg", ".pdf")):
-                filename += ".png"
-            with open(filename, "wb") as f:
-                f.write(png_data)
-
-    #GES gcastle
-
-    elif algorithm_used == "ges_gcastle":
-        adjacency_matrix = graph.causal_matrix
-        learned_graph = nx.DiGraph()
-        undirected_paths = set() # Set to check if we have undirected_paths
-
-        # Add directed edges based on the condition
-        for i in range(len(adjacency_matrix)):
-            for j in range(len(adjacency_matrix[0])):
-                if adjacency_matrix[i][j] == 1 and adjacency_matrix[j][i] == 0:
-                    learned_graph.add_edge(labels[i], labels[j])
-                elif (adjacency_matrix[i][j] == 1 and adjacency_matrix[j][i] == 1) and ((labels[i],labels[j]) not in undirected_paths and (labels[j],labels[i]) not in undirected_paths):
-                    learned_graph.add_edge(labels[i], labels[j], style="dashed", arrowhead="none")
-                    undirected_paths.add((labels[i],labels[j]))
-
-        pos = nx.circular_layout(learned_graph)
-        pydot_graph = nx.drawing.nx_pydot.to_pydot(learned_graph)
-
-        png_data = pydot_graph.create_png()
-        if filename is None:
-            with open("graph.png", "wb") as f:
-                f.write(png_data)
-        else:
-            if not filename.lower().endswith((".png", ".jpeg", ".pdf")):
-                filename += ".png"
-            with open(filename, "wb") as f:
-                f.write(png_data)
-
-    #PC Causal_learn
-
-    elif algorithm_used == "pc_causal":
-
-        adjacency_matrix = graph.G.graph
-        learned_graph = nx.DiGraph()
-        undirected_paths = set() # Set to check if we have undirected_paths
-
-        # Add directed edges based on the condition
-        for i in range(len(adjacency_matrix)):
-            for j in range(len(adjacency_matrix[0])):
-                if adjacency_matrix[i][j] == -1 and adjacency_matrix[j][i] == 1:
-                    learned_graph.add_edge(labels[i], labels[j])
-                elif ((adjacency_matrix[i][j] == -1 and adjacency_matrix[j][i] == -1) or (adjacency_matrix[i][j] == 1 and adjacency_matrix[j][i] == 1)) and ((labels[i],labels[j]) not in undirected_paths and (labels[j],labels[i]) not in undirected_paths):
-                    learned_graph.add_edge(labels[i], labels[j], style="dashed", arrowhead="none")
-                    undirected_paths.add((labels[i],labels[j]))
-
-        pos = nx.circular_layout(learned_graph)
-        pydot_graph = nx.drawing.nx_pydot.to_pydot(learned_graph)
-
-        png_data = pydot_graph.create_png()
-        if filename is None:
-            with open("graph.png", "wb") as f:
-                f.write(png_data)
-        else:
-            if not filename.lower().endswith((".png", ".jpeg", ".pdf")):
-                filename += ".png"
-            with open(filename, "wb") as f:
-                f.write(png_data)
     
-    #GES Causal_learn
+    learned_graph = nx.DiGraph()
+    undirected_paths = set() # Set to check if we have undirected_paths
 
-    elif algorithm_used == "ges_causal":
-        adjacency_matrix = graph['G'].graph
-        learned_graph = nx.DiGraph()
-        undirected_paths = set() # Set to check if we have undirected_paths
+    if algorithm_used == "pc_gcastle" or algorithm_used == "ges_gcastle":
+        adjacency_matrix = graph.causal_matrix
+        
+        for i in range(len(adjacency_matrix)):
+            for j in range(len(adjacency_matrix[0])):
+                if adjacency_matrix[i][j] == 1 and adjacency_matrix[j][i] == 0:
+                    learned_graph.add_edge(labels[i], labels[j])
+                elif (adjacency_matrix[i][j] == 1 and adjacency_matrix[j][i] == 1) and ((labels[i],labels[j]) not in undirected_paths and (labels[j],labels[i]) not in undirected_paths):
+                    learned_graph.add_edge(labels[i], labels[j], style="dashed", arrowhead="none")
+                    undirected_paths.add((labels[i],labels[j]))
+    
 
-        # Add directed edges based on the condition
+    elif algorithm_used == "pc_causal" or algorithm_used == "ges_causal":
+        if algorithm_used == "pc_causal":
+            adjacency_matrix = graph.G.graph
+        elif algorithm_used == "ges_causal":
+            adjacency_matrix = graph['G'].graph
+
         for i in range(len(adjacency_matrix)):
             for j in range(len(adjacency_matrix[0])):
                 if adjacency_matrix[i][j] == -1 and adjacency_matrix[j][i] == 1:
@@ -175,109 +99,53 @@ def draw_graph(graph_list, labels, filename=None):
                     learned_graph.add_edge(labels[i], labels[j], style="dashed", arrowhead="none")
                     undirected_paths.add((labels[i],labels[j]))
 
-        pos = nx.circular_layout(learned_graph)
-        pydot_graph = nx.drawing.nx_pydot.to_pydot(learned_graph)
+    pos = nx.circular_layout(learned_graph)
+    pydot_graph = nx.drawing.nx_pydot.to_pydot(learned_graph)
 
-        png_data = pydot_graph.create_png()
-        if filename is None:
-            with open("graph.png", "wb") as f:
-                f.write(png_data)
-        else:
-            if not filename.lower().endswith((".png", ".jpeg", ".pdf")):
-                filename += ".png"
-            with open(filename, "wb") as f:
-                f.write(png_data)
+    png_data = pydot_graph.create_png()
+    if filename is None:
+        with open("graph.png", "wb") as f:
+            f.write(png_data)
+    else:
+        if not filename.lower().endswith((".png", ".jpeg", ".pdf")):
+            filename += ".png"
+        with open(filename, "wb") as f:
+            f.write(png_data)
+
+
 
 
 
 
 def add_path(graph_list, labels, path_to_add):
-
     """
     graph_list: a list containing a string and CausalGraph object
-
     labels: labels of the dataset
-
     path_to_add: a list containing two nodes. For example ["Sex","Race"]. This will add the path from "Sex" to "Race"
-
     """
     algorithm_used = graph_list[0]
     graph = graph_list[1]
 
-    if algorithm_used == "pc_gcastle":
-
-        column_to_index = {col: i for i, col in enumerate(labels)}
-        if path_to_add[0] not in column_to_index.keys() or path_to_add[1] not in column_to_index.keys():
-            print("Error: given path is not in the labels for the data")
-            return graph
-
-        # Find the indices of the nodes
-        node1_index = column_to_index[path_to_add[0]]
-        node2_index = column_to_index[path_to_add[1]]
-
-        graph.causal_matrix[node1_index, node2_index] = 1
-        # Remove edge from node2 to node1, if it exists (uncomment the line below if you want that)
-        # pc.causal_matrix[node2_to_disconnect, node1_to_disconnect] = 0
-
+    column_to_index = {col: i for i, col in enumerate(labels)}
+    if path_to_add[0] not in column_to_index.keys() or path_to_add[1] not in column_to_index.keys():
+        print("Error: given path is not in the labels for the data")
         return graph
 
-    #GES gcastle
+    node1_index = column_to_index[path_to_add[0]]
+    node2_index = column_to_index[path_to_add[1]]
 
-    elif algorithm_used == "ges_gcastle":
-        column_to_index = {col: i for i, col in enumerate(labels)}
-        if path_to_add[0] not in column_to_index.keys() or path_to_add[1] not in column_to_index.keys():
-            print("Error: given path is not in the labels for the data")
-            return graph
-
-        # Find the indices of the nodes
-        node1_index = column_to_index[path_to_add[0]]
-        node2_index = column_to_index[path_to_add[1]]
-
+    if algorithm_used == "pc_gcastle" or algorithm_used == "ges_gcastle":
         graph.causal_matrix[node1_index, node2_index] = 1
-        # Remove edge from node2 to node1, if it exists (uncomment the line below if you want that)
-        # pc.causal_matrix[node2_to_disconnect, node1_to_disconnect] = 0
-
-        return graph
-
-    #PC Causal_learn
-
     elif algorithm_used == "pc_causal":
-
-        column_to_index = {col: i for i, col in enumerate(labels)}
-        if path_to_add[0] not in column_to_index.keys() or path_to_add[1] not in column_to_index.keys():
-            print("Error: given path is not in the labels for the data")
-            return graph
-
-        # Find the indices of the nodes
-        node1_index = column_to_index[path_to_add[0]]
-        node2_index = column_to_index[path_to_add[1]]
-
-        # Add the edge from node1 to node2
         graph.G.graph[node2_index, node1_index] = 1
         graph.G.graph[node1_index, node2_index] = -1
-
-
-        return graph
-
-    #GES Causal_learn
-
     elif algorithm_used == "ges_causal":
-
-        column_to_index = {col: i for i, col in enumerate(labels)}
-        if path_to_add[0] not in column_to_index.keys() or path_to_add[1] not in column_to_index.keys():
-            print("Error: given path is not in the labels for the data")
-            return graph
-
-        # Find the indices of the nodes
-        node1_index = column_to_index[path_to_add[0]]
-        node2_index = column_to_index[path_to_add[1]]
-
-        # Add the edge from node1 to node2
         graph["G"].graph[node2_index, node1_index] = 1
         graph["G"].graph[node1_index, node2_index] = -1
 
+    return graph
 
-        return graph
+
     
 def delete_path(graph_list, labels, path_to_delete):
 
@@ -292,75 +160,24 @@ def delete_path(graph_list, labels, path_to_delete):
     algorithm_used = graph_list[0]
     graph = graph_list[1]
 
-    if algorithm_used == "pc_gcastle":
+    column_to_index = {col: i for i, col in enumerate(labels)}
 
-        column_to_index = {col: i for i, col in enumerate(labels)}
-        if path_to_delete[0] not in column_to_index.keys() or path_to_delete[1] not in column_to_index.keys():
-            print("Error: given path is not in the labels for the data")
-            return graph
-
-        # Find the indices of the nodes
-        node1_index = column_to_index[path_to_delete[0]]
-        node2_index = column_to_index[path_to_delete[1]]
-
-        graph.causal_matrix[node1_index, node2_index] = 0
-        # Remove edge from node2 to node1, if it exists (uncomment the line below if you want that)
-        # pc.causal_matrix[node2_to_disconnect, node1_to_disconnect] = 0
-
+    if path_to_delete[0] not in column_to_index.keys() or path_to_delete[1] not in column_to_index.keys():
+        print("Error: given path is not in the labels for the data")
         return graph
 
-    #GES gcastle
+    node1_index = column_to_index[path_to_delete[0]]
+    node2_index = column_to_index[path_to_delete[1]]
 
-    elif algorithm_used == "ges_gcastle":
-
-        column_to_index = {col: i for i, col in enumerate(labels)}
-        if path_to_delete[0] not in column_to_index.keys() or path_to_delete[1] not in column_to_index.keys():
-            print("Error: given path is not in the labels for the data")
-            return graph
-
-        # Find the indices of the nodes
-        node1_index = column_to_index[path_to_delete[0]]
-        node2_index = column_to_index[path_to_delete[1]]
-
+    if algorithm_used == "pc_gcastle" or algorithm_used == "ges_gcastle":
         graph.causal_matrix[node1_index, node2_index] = 0
-
-        return graph
-
-    #PC Causal_learn
-
     elif algorithm_used == "pc_causal":
-
-        column_to_index = {col: i for i, col in enumerate(labels)}
-        if path_to_delete[0] not in column_to_index.keys() or path_to_delete[1] not in column_to_index.keys():
-            print("Error: given path is not in the labels for the data")
-            return graph
-
-        # Find the indices of the nodes
-        node1_index = column_to_index[path_to_delete[0]]
-        node2_index = column_to_index[path_to_delete[1]]
-
-        # Remove the edge from node1 to node2
         graph.G.graph[node1_index, node2_index] = 0
-
-        return graph
-    
-    #GES Causal_learn
-
     elif algorithm_used == "ges_causal":
-
-        column_to_index = {col: i for i, col in enumerate(labels)}
-        if path_to_delete[0] not in column_to_index.keys() or path_to_delete[1] not in column_to_index.keys():
-            print("Error: given path is not in the labels for the data")
-            return graph
-
-        # Find the indices of the nodes
-        node1_index = column_to_index[path_to_delete[0]]
-        node2_index = column_to_index[path_to_delete[1]]
-
-        # Remove the edge from node1 to node2
         graph["G"].graph[node1_index, node2_index] = 0
 
-        return graph
+    return graph
+
 
 
 data_file_path = sys.argv[1]
