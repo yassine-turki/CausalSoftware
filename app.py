@@ -207,16 +207,30 @@ def run_metrics():
     python_bin = "env\Scripts\python"
     dataset_path = app.config['DATASET_FOLDER'] + "\\" + userdata["dataset"] + "\\"
     
-    if userdata["algorithm"] == "pc_gcastle" and userdata["library_metrics"] == "dowhy":    
-        subprocess.Popen([python_bin, 'dowhy_file.py', dataset_path + userdata["dataset"] + ".csv", userdata["treatment"], userdata["outcome"], userdata["estimator"], userdata["method_name"]]).wait()
-    elif userdata["algorithm"] == "pc_causal":
-        subprocess.Popen([python_bin, 'dowhy_file.py', dataset_path + userdata["dataset"] + ".csv", userdata["treatment"], userdata["outcome"], userdata["estimator"], userdata["method_name"]]).wait()
-    elif userdata["algorithm"] == "ges_gcastle":
-        subprocess.Popen([python_bin, 'dowhy_file.py', dataset_path + userdata["dataset"] + ".csv", userdata["treatment"], userdata["outcome"], userdata["estimator"], userdata["method_name"]]).wait()
-    elif userdata["algorithm"] == "ges_causal":
-        subprocess.Popen([python_bin, 'dowhy_file.py', dataset_path + userdata["dataset"] + ".csv", userdata["treatment"], userdata["outcome"], userdata["estimator"], userdata["method_name"]]).wait()
+    popup_message_metrics = ''
+
+    if userdata["library_metrics"] == "dowhy":    
+        proc = subprocess.Popen([python_bin, 'dowhy_file.py', dataset_path + userdata["dataset"] + ".csv", userdata["treatment"], userdata["outcome"], userdata["estimator"], userdata["method_name"]], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        proc.wait()
+        while True:
+            line = proc.stdout.readline()
+            if not line:
+                break
+            line_str = line.decode()
+            popup_message_metrics += line_str
+            print(line_str)
+        while True:
+            line = proc.stderr.readline()
+            if not line:
+                break    
+            line_str = line.decode()
+            popup_message_metrics += line_str
+            print(line_str)
     else:
         print("Option doesn't exist.")
+
+    if popup_message_metrics != '':
+        session['popup_message'] = popup_message_metrics.replace("`", "'")
 
     return redirect("/run_metrics")
 

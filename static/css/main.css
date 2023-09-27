@@ -91,6 +91,11 @@ small{
 	font-size: 13px;
 }
 
+.generated_image{
+	max-width: 80px;
+	max-height: 80px;
+}
+
 ul.breadcrumb {
 	padding: 10px 16px;
 	list-style: none;

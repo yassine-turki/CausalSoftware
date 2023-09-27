@@ -29,7 +29,7 @@ from dowhy.causal_estimators import (
 )
 import statsmodels.api as sm
 
-
+sys.tracebacklimit = 0
 
 
 
