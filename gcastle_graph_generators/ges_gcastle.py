@@ -26,7 +26,7 @@ from graphviz import Digraph
 
 def run_ges_gcastle(data, criterion='bic', method='scatter', k=0.001, N=10):
 
-  """
+  """ Comments taken directly from gcastle library
   data: a numpy array
 
   Parameters

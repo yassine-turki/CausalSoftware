@@ -39,7 +39,7 @@
                   <label for="outcome" style = "font-weight: bold;">Outcome:</label><br>
                   <input type="text" id="outcome" name="outcome"><br> 
                   <br>
-                  <label for="estimator" style = "font-weight: bold;">Choose the estimator:</label>
+                  <label for="estimator" style = "font-weight: bold;">Choose the estimator to compute DE and IE:</label>
                   <select name="estimator" id="estimator">
                     <option value="distance_matching_estimator">distance_matching_estimator</option>
                     <option value="generalized_linear_model_estimator">generalized_linear_model_estimator</option>
@@ -51,7 +51,7 @@
                     <option value="regression_discontinuity_estimator">regression_discontinuity_estimator</option>
                   </select>
                   <br><br>
-                  <label for="method_name" style = "font-weight: bold;">Choose the method for the estimates:</label>
+                  <label for="method_name" style = "font-weight: bold;">Choose the estimator to compute ATT, ATC, ATE:</label>
                   <select name="method_name" id="method_name">
                     <option value="backdoor.propensity_score_matching">Propensity Score Matching</option>
                     <option value="backdoor.propensity_score_stratification">Propensity Score Stratification</option>

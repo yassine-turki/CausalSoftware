@@ -24,7 +24,7 @@ from graphviz import Digraph
 
 def run_ges_causal_learn(data, score_func = "local_score_BIC", maxP = None, parameters = None):
 
-  """
+  """ Comments taken directly from causal learn library
   data: numpy.ndarray, shape (n_samples, n_features). Data, where n_samples is the number of samples and n_features is the number of features.
 
   score_func: The score function you would like to use, including (see score_functions.). Default: ‘local_score_BIC’.

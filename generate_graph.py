@@ -183,7 +183,7 @@ def delete_path(graph_list, labels, path_to_delete):
 data_file_path = sys.argv[1]
 algorithm_selected = sys.argv[2]
 
-data, labels = load_and_check_data(data_file_path, dropna = False, drop_objects = False)
+dataframe, data, labels = load_and_check_data(data_file_path, dropna = False, drop_objects = False)
 
 if algorithm_selected == "pc_gcastle":
     graph = run_pc_gcastle(data, labels, variant="original", alpha=0.05, ci_test="fisherz", priori_knowledge=None)

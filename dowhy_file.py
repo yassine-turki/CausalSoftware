@@ -9,6 +9,7 @@ import pydot
 import sys
 import json
 import pickle
+import os
 
 import dowhy
 from dowhy import CausalModel
@@ -29,7 +30,7 @@ from dowhy.causal_estimators import (
 )
 import statsmodels.api as sm
 
-sys.tracebacklimit = 0
+#sys.tracebacklimit = 0
 
 
 
@@ -76,7 +77,7 @@ def adjacency_matrix_to_gml(graph_list, labels):
 
 def create_model(graph_list, df, treatment, outcome, common_causes = None, instruments = None, effect_modifiers = None, estimand_type = "nonparametric-ate", proceed_when_unidentifiable = True, missing_nodes_as_confounders = False, identify_vars = False):
 
-    """
+    """ Comments directly taken from dowhy library
             :param graph_list : a list containing a string and CausalGraph object
             :param df: a pandas dataframe containing treatment, outcome and other variables.
             :param treatment: name of the treatment variable
@@ -116,7 +117,7 @@ def create_model(graph_list, df, treatment, outcome, common_causes = None, instr
 
 def find_effect(model, estimand_type=None, method_name="default", proceed_when_unidentifiable=True, optimize_backdoor=False):
 
-    """Identify the causal effect to be estimated, using properties of the causal graph.
+    """Identify the causal effect to be estimated, using properties of the causal graph. Comments directly taken from dowhy library
 
     :param model: A dowhy model class instance
     :param method_name: Method name for identification algorithm. ("id-algorithm" or "default")
@@ -140,7 +141,7 @@ def compute_effect_dowhy(model, identified_estimand,
                    fit_estimator=True,
                    method_params=None):
 
-    """Estimate the identified causal effect.
+    """Estimate the identified causal effect. Comments directly taken from dowhy library
 
     Currently requires an explicit method name to be specified. Method names follow the convention of identification method followed by the specific estimation method: "[backdoor/iv].estimation_method_name". Following methods are supported.
         * Propensity Score Matching: "backdoor.propensity_score_matching"
@@ -203,7 +204,7 @@ def compute_effect_dowhy(model, identified_estimand,
 
 def compute_estimates_dowhy(graph_list, data, treatment, outcome, method_name):
     """
-    graph_list : a list of a string and a causalGraph object
+    graph_list : a list of a string and a causalGraph object. 
     data: a pandas dataframe
     treatment : treatment variable name
     outcome : outcome variable name
@@ -236,7 +237,7 @@ def compute_estimates_dowhy(graph_list, data, treatment, outcome, method_name):
 
 def compute_direct_effect_dowhy(graph_list, data, treatment, outcome, estimator = "linear_regression_estimator"):
 
-    """ Computes the direct effect from the treatment to the outcome
+    """ Computes the direct effect from the treatment to the outcome. Comments directly taken from dowhy library
     # graph_list : a list of a string and a causalgraph object
     # data : a pandas dataframe
     # treatment : the treatment variable
@@ -284,9 +285,7 @@ def compute_direct_effect_dowhy(graph_list, data, treatment, outcome, estimator 
     identified_estimand_nde = model.identify_effect(estimand_type="nonparametric-nde",
                                                 proceed_when_unidentifiable=True)
     if len(identified_estimand_nde.get_mediator_variables()) == 0 :  #If there is no mediator
-        print("No mediator between treatment and outcome found, NDE is equal to ATE")
-        return 
-                                                
+        raise ValueError("No mediator between treatment and outcome found, NDE is equal to ATE")                                                       
 
     if estimator == "distance_matching_estimator":
         causal_estimator = dowhy.causal_estimators.distance_matching_estimator.DistanceMatchingEstimator
@@ -343,7 +342,7 @@ def compute_direct_effect_dowhy(graph_list, data, treatment, outcome, estimator 
 
 def compute_indirect_effect_dowhy(graph_list, data, treatment, outcome, estimator = "linear_regression_estimator"):
 
-    """ Computes the direct effect from the treatment to the outcome
+    """ Computes the direct effect from the treatment to the outcome. Comments directly taken from dowhy library
     # graph_list : a list with a string and a causal graph Object
     # data : a pandas dataframe
     # treatment : the treatment variable
@@ -391,6 +390,10 @@ def compute_indirect_effect_dowhy(graph_list, data, treatment, outcome, estimato
 
     identified_estimand_nie = model.identify_effect(estimand_type="nonparametric-nie",
                                                 proceed_when_unidentifiable=True)
+    
+    if len(identified_estimand_nie.get_mediator_variables()) == 0 :  #If there is no mediator
+        raise ValueError("No mediator between treatment and outcome found, cannot compute Indirect Effect")
+    
     if estimator == "distance_matching_estimator":
         causal_estimator = dowhy.causal_estimators.distance_matching_estimator.DistanceMatchingEstimator
     elif estimator == "generalized_linear_model_estimator":
@@ -443,17 +446,45 @@ def compute_indirect_effect_dowhy(graph_list, data, treatment, outcome, estimato
     return causal_estimate_nie.value
 
 
+
+
 # Load graph_list from the pickle file
 with open('graph_list.pkl', 'rb') as pickle_file:
     graph_list = pickle.load(pickle_file)
 file_path = sys.argv[1]
-dowhy_data = pd.read_csv(file_path)
-# Compute ATE, ATC, ATT
-dict_of_estimates = compute_estimates_dowhy(graph_list,dowhy_data, treatment = sys.argv[2], outcome = sys.argv[3], method_name = sys.argv[5])
-print(dict_of_estimates)
-#Compute Direct Effect
-direct_effect = compute_direct_effect_dowhy(graph_list, dowhy_data, treatment = sys.argv[2], outcome = sys.argv[3], estimator = sys.argv[4])
-print("Direct effect from treatment to outcome =", direct_effect)
-#Compute Indirect Effect
-indirect_effect = compute_indirect_effect_dowhy(graph_list, dowhy_data, treatment = sys.argv[2], outcome = sys.argv[3], estimator = sys.argv[4])
-print("Indirect effect from treatment to outcome =", indirect_effect)
+dowhy_data, _, _ = load_and_check_data(file_path)
+
+# Check if "error.txt" file exists
+if os.path.exists("error.txt"):
+    # Open "error.txt" in write mode to clear its content
+    with open("error.txt", "w"):
+        pass
+
+# ATT, ATC, ATE
+newfile = "w"
+try:
+    dict_of_estimates = compute_estimates_dowhy(graph_list, dowhy_data, treatment = sys.argv[2], outcome = sys.argv[3], method_name = sys.argv[5])
+    print(dict_of_estimates)
+except Exception as e:
+    with open("error.txt", newfile) as error_file:
+        error_file.write("-"+str(e) + "\n")
+        newfile = "a"
+
+#Direct Effect
+try:
+    direct_effect = compute_direct_effect_dowhy(graph_list, dowhy_data, treatment = sys.argv[2], outcome = sys.argv[3], estimator = sys.argv[4])
+    print("Direct effect from treatment to outcome =", direct_effect)
+except Exception as e:
+    with open("error.txt", newfile) as error_file:
+        error_file.write("-"+str(e) + "\n")
+        if newfile == "w":
+            newfile = "a"
+
+
+#Indirect Effect
+try:
+    indirect_effect = compute_indirect_effect_dowhy(graph_list, dowhy_data, treatment = sys.argv[2], outcome = sys.argv[3], estimator = sys.argv[4])
+    print("Indirect effect from treatment to outcome =", indirect_effect)
+except Exception as e:
+    with open("error.txt", "a") as error_file:
+        error_file.write("-"+str(e) + "\n")

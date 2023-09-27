@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-def load_and_check_data(data_file_path, dropna=False, drop_objects=False):
+def load_and_check_data(data_file_path, dropna=True, drop_objects=True):
   """
   Loads dataset and checks if there are any NaN values and non numerical data
   Returns an np array of the values in the dataframe, and a list of labels
@@ -37,4 +37,4 @@ def load_and_check_data(data_file_path, dropna=False, drop_objects=False):
     else:
       data=data.drop(columns=object_columns)
 
-  return data.values, data.columns
+  return data, data.values, data.columns

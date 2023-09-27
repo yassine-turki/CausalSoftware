@@ -210,27 +210,13 @@ def run_metrics():
     popup_message_metrics = ''
 
     if userdata["library_metrics"] == "dowhy":    
-        proc = subprocess.Popen([python_bin, 'dowhy_file.py', dataset_path + userdata["dataset"] + ".csv", userdata["treatment"], userdata["outcome"], userdata["estimator"], userdata["method_name"]], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        proc = subprocess.Popen([python_bin, 'dowhy_file.py', dataset_path + userdata["dataset"] + ".csv", userdata["treatment"], userdata["outcome"], userdata["estimator"], userdata["method_name"]])
         proc.wait()
-        while True:
-            line = proc.stdout.readline()
-            if not line:
-                break
-            line_str = line.decode()
-            popup_message_metrics += line_str
-            print(line_str)
-        while True:
-            line = proc.stderr.readline()
-            if not line:
-                break    
-            line_str = line.decode()
-            popup_message_metrics += line_str
-            print(line_str)
+        with open("error.txt","r") as error_file: 
+            popup_message_metrics = "".join(error_file.readlines())
     else:
         print("Option doesn't exist.")
-
-    if popup_message_metrics != '':
-        session['popup_message'] = popup_message_metrics.replace("`", "'")
+    session["popup_message"] = popup_message_metrics
 
     return redirect("/run_metrics")
 
@@ -253,6 +239,7 @@ def login():
         return redirect("/")
     return render_template("login.html")
     #return 'User registered'
+
 
 @app.route("/logout")
 def logout():

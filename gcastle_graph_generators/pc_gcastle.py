@@ -25,7 +25,8 @@ from graphviz import Digraph
 
 
 def run_pc_gcastle(data, labels, variant="original", alpha=0.05, ci_test="fisherz", priori_knowledge=None):
-  """
+  
+  """Comments taken directly from gcastle library
   data: a numpy array
 
   variant : str
