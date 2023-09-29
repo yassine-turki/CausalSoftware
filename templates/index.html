@@ -1,71 +1,292 @@
 {% extends 'base.html' %}
 
 {% block head %}
-<title>Causal Discovery</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-<link href = "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js">
-<link href = "https://use.fontawesome.com/releases/v5.7.2/css/all.css">
+    <title>Causal Discovery</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js">
+    <link href="https://use.fontawesome.com/releases/v5.7.2/css/all.css">
+    <style>
+        .param-label {
+            min-width: 120px;
+            display: inline-block;
+        }
+
+        .param-input {
+            width: 100%;
+        }
+    </style>
 {% endblock %}
 
 {% block body %}
-  <br><br>
-  <h1 style="text-align: center; color: aliceblue;">Causal Discovery Graph Generator</h1>
-  <div class="container">
+<br><br>
+<h1 style="text-align: center; color: aliceblue;">Causal Discovery Graph Generator</h1>
+<div class="container">
     <div class="row d-flex justify-content-center text-center mt-5">
-       <div class="col-12 col-md-8 col-lg-6 col-xl-5">
-          <div class="card py-3 px-2">
-            <div class = "upload">
-              <h5>Upload your own dataset below:</h5>
-              </br>
-              <form action = "http://localhost:5000/uploader" method = "POST" 
-              enctype = "multipart/form-data">
-              <input type = "file" name = "file" />
-              <input type = "submit"/>
-            </form> 
-            <br><br>  
-            </div>
-             <form class="myform" method="POST" action="/run_script">
-                <div class="form-group">
-                  <label for="datasets" style = "font-weight: bold;">Or choose an existing dataset:</label>
-                  <select name="datasets" id="datasets">
-                    <option value="adult">Adult</option>
-                    <option value="boston">Boston</option>
-                    <option value="census">Dutch Census</option>
-                    <option value="compas">Compas</option>
-                    <option value="cards">Credit Cards</option>
-                    <option value="crimes">Crime rates</option>
-                    <option value="fico">FICO</option>
-                    <option value="lalonde">La Londe</option>
-                    <option value="lawschool">Law School</option>
-                    <option value="police">Police Arrest</option>
-                  </select>
-                  <br><br>
-                  <br>
-                  <label for="algorithm" style = "font-weight: bold;">Now, choose the algorithm:</label>
-                  <select name="algorithm" id="algorithm">
-                    <option value="pc_gcastle">PC Gcastle</option>
-                    <option value="pc_causal">PC CausalLearn</option>
-                    <option value="ges_gcastle">GES Gcastle</option>
-                    <option value="ges_causal">GES CausalLearn</option>
-                  </select>
-                  <br><br>
-                  <br>
+        <div class="col-12 col-md-8 col-lg-6 col-xl-5">
+            <div class="card py-3 px-2">
+                <div class="upload">
+                    <h5>Upload your own dataset below:</h5>
+                    <br>
+                    <form action="http://localhost:5000/uploader" method="POST" enctype="multipart/form-data">
+                        <input type="file" name="file" />
+                        <input type="submit" />
+                    </form>
+                    <br><br>
                 </div>
-                <div class="form-group mt-3">
-                   <input type="submit" class="btn btn-block btn-primary btn-lg" value="Generate">
-                </div>
-             </form>
-          </div>
-       </div>
-    </div>
- </div>   
-  {% if session.name %}
-        <div class = "connection">
-          You are registered {{ session.name }} <a href="/logout">logout</a>.
-        </div>
-      {% else %}
-        You are not registered. <a href="/login">login</a>.
-  {% endif %}
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
-{% endblock %}
+                <form class="myform" method="POST" action="/run_script">
+                    <div class="form-group">
+                        <label for="datasets" style="font-weight: bold;">Or choose an existing dataset:</label>
+                        <select name="datasets" id="datasets">
+                            <option value="adult">Adult</option>
+                            <option value="boston">Boston</option>
+                            <option value="census">Dutch Census</option>
+                            <option value="compas">Compas</option>
+                            <option value="cards">Credit Cards</option>
+                            <option value="crimes">Crime rates</option>
+                            <option value="fico">FICO</option>
+                            <option value="lalonde">La Londe</option>
+                            <option value="lawschool">Law School</option>
+                            <option value="police">Police Arrest</option>
+                        </select>
+                        <br><br>
+                        <br>
+                        <label for="algorithm" style="font-weight: bold;">Now, choose the algorithm:</label>
+                        <select name="algorithm" id="algorithm" onchange="showAlgorithmParameters(),setDefaultAlgorithmParameters() ">
+                          
+                            <option value="pc_gcastle">PC Gcastle</option>
+                            <option value="pc_causal">PC CausalLearn</option>
+                            <option value="ges_gcastle">GES Gcastle</option>
+                            <option value="ges_causal">GES CausalLearn</option>
+                        </select>
+                        <br><br>
+                        <br>
 
+                        <!-- PC Gcastle Parameters -->
+                        <div id="pc_gcastle_params" style="display: none;">
+                          <h2>PC Gcastle Parameters</h2>
+                          <div class="form-group">
+                              <label class="param-label" for="pc_variant">Variant:</label>
+                              <select class="param-input" name="pc_variant" id="pc_variant">
+                                  <option value="original">Original</option>
+                                  <option value="stable">Stable</option>
+                                  <option value="parallel">Parallel</option>
+                              </select>
+                          </div>
+                          <div class="form-group">
+                              <label class="param-label" for="pc_alpha">Alpha:</label>
+                              <input class="param-input" type="number" step="0.01" name="pc_alpha" id="pc_alpha">
+                          </div>
+                          <div class="form-group">
+                              <label class="param-label" for="pc_ci_test">CI Test:</label>
+                              <select class="param-input" name="pc_ci_test" id="pc_ci_test">
+                                  <option value="fisherz">Fisherz</option>
+                                  <option value="g2">G2</option>
+                                  <option value="chi2">Chi2</option>
+                              </select>
+                          </div>
+                          <div class="form-group">
+                              <label class="param-label" for="pc_tiers">Tiers:</label>
+                              <textarea class="param-input" name="pc_tiers" id="pc_tiers" rows="3"></textarea>
+                              <small class="form-text text-muted">Enter tiers as a list of lists, e.g., [["income", "relationship"],["Sex", "workclass"]].</small>
+                          </div>
+                      </div>
+
+                      <!-- PC CausalLearn Parameters -->
+                      <div id="pc_causal_params" style="display: none;">
+                        <h2>PC CausalLearn Parameters</h2>
+                        <div class="form-group">
+                            <label class="param-label" for="pc_alpha_cl">Alpha:</label>
+                            <input class="param-input" type="number" step="0.01" name="pc_alpha_cl" id="pc_alpha_cl">
+                        </div>
+                        <div class="form-group">
+                            <label class="param-label" for="pc_indep_test">Independence Test:</label>
+                            <select class="param-input" name="pc_indep_test" id="pc_indep_test">
+                                <option value="fisherz">Fisher's Z</option>
+                                <option value="chisq">Chi-squared</option>
+                                <option value="gsq">G-squared</option>
+                                <option value="kci">Kernel-based</option>
+                                <option value="mv_fisherz">Missing-value Fisher's Z</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="param-label" for="pc_stable">Stable:</label>
+                            <input class="param-input" type="checkbox" name="pc_stable" id="pc_stable">
+                        </div>
+                        <div class="form-group">
+                          <label class="param-label" for="pc_tiers">Tiers:</label>
+                          <textarea class="param-input" name="pc_tiers" id="pc_tiers" rows="3"></textarea>
+                          <small class="form-text text-muted">Enter tiers as a list of lists, e.g., [["income", "relationship"],["Sex", "workclass"]].</small>
+                      </div>
+                        <div class="form-group">
+                            <label class="param-label" for="pc_uc_rule">UC Rule:</label>
+                            <select class="param-input" name="pc_uc_rule" id="pc_uc_rule">
+                                <option value="0">UC Sepset</option>
+                                <option value="1">MaxP</option>
+                                <option value="2">DefiniteMaxP</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="param-label" for="pc_uc_priority">UC Priority:</label>
+                            <select class="param-input" name="pc_uc_priority" id="pc_uc_priority">
+                                <option value="-1">Default in UC Rule</option>
+                                <option value="0">Overwrite</option>
+                                <option value="1">Orient Bi-directed</option>
+                                <option value="2">Prioritize Existing Colliders</option>
+                                <option value="3">Prioritize Stronger Colliders</option>
+                                <option value="4">Prioritize Stronger* Colliders</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="param-label" for="pc_mvpc">Use Missing-value PC:</label>
+                            <input class="param-input" type="checkbox" name="pc_mvpc" id="pc_mvpc">
+                        </div>
+                        <div class="form-group">
+                            <label class="param-label" for="pc_correction_name">Missing-value Correction:</label>
+                            <input class="param-input" type="text" name="pc_correction_name" id="pc_correction_name">
+                        </div>
+                      </div>
+
+
+                        <!-- GES Gcastle Parameters -->
+                        <div id="ges_gcastle_params" style="display: none;">
+                          <h2>GES Gcastle Parameters</h2>
+                          <div class="form-group">
+                              <label class="param-label" for="ges_criterion">Criterion:</label>
+                              <select class="param-input" name="ges_criterion" id="ges_criterion">
+                                  <option value="bic">BIC</option>
+                                  <option value="bdeu">BDEU</option>
+                              </select>
+                          </div>
+                          <div class="form-group">
+                              <label class="param-label" for="ges_method">Method:</label>
+                              <select class="param-input" name="ges_method" id="ges_method">
+                                  <option value="r2">R2</option>
+                                  <option value="scatter">Scatter</option>
+                              </select>
+                          </div>
+                          <div class="form-group">
+                              <label class="param-label" for="ges_k">K:</label>
+                              <input class="param-input" type="number" step="0.001" name="ges_k" id="ges_k" value="0.001">
+                          </div>
+                          <div class="form-group">
+                              <label class="param-label" for="ges_N">N:</label>
+                              <input class="param-input" type="number" name="ges_N" id="ges_N" value="10">
+                          </div>
+                        </div>
+
+
+                        <!-- GES CausalLearn Parameters -->
+                        <div id="ges_causal_params" style="display: none;">
+                          <h2>GES CausalLearn Parameters</h2>
+                          <div class="form-group">
+                              <label class="param-label" for="ges_score_func">Score Function:</label>
+                              <select class="param-input" name="ges_score_func" id="ges_score_func">
+                                  <option value="local_score_BIC">Local Score BIC</option>
+                                  <option value="local_score_BDeu">Local Score BDeu</option>
+                                  <option value="local_score_CV_general">Local Score CV General</option>
+                                  <option value="local_score_marginal_general">Local Score Marginal General</option>
+                                  <option value="local_score_CV_multi">Local Score CV Multi</option>
+                                  <option value="local_score_marginal_multi">Local Score Marginal Multi</option>
+                              </select>
+                          </div>
+                          <div class="form-group">
+                              <label class="param-label" for="ges_maxP">MaxP:</label>
+                              <input class="param-input" type="number" name="ges_maxP" id="ges_maxP">
+                          </div>
+                          <div class="form-group">
+                              <label class="param-label" for="ges_parameters_kfold">k-fold (CV Likelihood):</label>
+                              <input class="param-input" type="number" name="ges_parameters_kfold" id="ges_parameters_kfold">
+                          </div>
+                          <div class="form-group">
+                              <label class="param-label" for="ges_parameters_lambda">Regularization Parameter:</label>
+                              <input class="param-input" type="number" step="0.001" name="ges_parameters_lambda" id="ges_parameters_lambda">
+                          </div>
+                          <div class="form-group">
+                              <label class="param-label" for="ges_parameters_dlabel">Dimensions Label:</label>
+                              <input class="param-input" type="text" name="ges_parameters_dlabel" id="ges_parameters_dlabel">
+                          </div>
+                        </div>
+
+                    <div class="form-group mt-3">
+                        <input type="submit" class="btn btn-block btn-primary btn-lg" value="Generate">
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% if session.name %}
+<div class="connection">
+    You are registered {{ session.name }} <a href="/logout">logout</a>.
+</div>
+{% else %}
+You are not registered. <a href="/login">login</a>.
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+    crossorigin="anonymous"></script>
+    <script>
+      // Function to set default values for algorithm parameters
+      function setDefaultAlgorithmParameters() {
+          const algorithm = document.getElementById("algorithm").value;
+    
+          if (algorithm === "pc_gcastle") {
+              document.getElementById("pc_variant").value = "original";
+              document.getElementById("pc_alpha").value = "0.05";
+              document.getElementById("pc_ci_test").value = "fisherz";
+              document.getElementById("pc_tiers").value = '';
+          } else if (algorithm === "pc_causal") {
+              document.getElementById("pc_alpha_cl").value = "0.05";
+              document.getElementById("pc_indep_test").value = "fisherz";
+              document.getElementById("pc_stable").checked = true;
+              document.getElementById("pc_uc_rule").value = "0";
+              document.getElementById("pc_uc_priority").value = "2";
+              document.getElementById("pc_mvpc").checked = false;
+              document.getElementById("pc_correction_name").value = "MV_Crtn_Fisher_Z";
+          } else if (algorithm === "ges_gcastle") {
+              document.getElementById("ges_criterion").value = "bic";
+              document.getElementById("ges_method").value = "scatter";
+              document.getElementById("ges_k").value = "0.001";
+              document.getElementById("ges_N").value = "10";
+          } else if (algorithm === "ges_causal") {
+              document.getElementById("ges_score_func").value = "local_score_BIC";
+              document.getElementById("ges_maxP").value = "";
+              document.getElementById("ges_parameters_kfold").value = "";
+              document.getElementById("ges_parameters_lambda").value = "";
+              document.getElementById("ges_parameters_dlabel").value = "";
+          }
+    
+          // Show the parameter section
+          showAlgorithmParameters();
+      }
+    
+      // Call the function when the page is loaded
+      window.onload = setDefaultAlgorithmParameters;
+    
+      // Function to show/hide algorithm parameters
+      function showAlgorithmParameters() {
+          const algorithm = document.getElementById("algorithm").value;
+          const pc_gcastle_params = document.getElementById("pc_gcastle_params");
+          const pc_causal_params = document.getElementById("pc_causal_params");
+          const ges_gcastle_params = document.getElementById("ges_gcastle_params");
+          const ges_causal_params = document.getElementById("ges_causal_params");
+    
+          pc_gcastle_params.style.display = "none";
+          pc_causal_params.style.display = "none";
+          ges_gcastle_params.style.display = "none";
+          ges_causal_params.style.display = "none";
+    
+          if (algorithm === "pc_gcastle") {
+              pc_gcastle_params.style.display = "block";
+          } else if (algorithm === "pc_causal") {
+              pc_causal_params.style.display = "block";
+          } else if (algorithm === "ges_gcastle") {
+              ges_gcastle_params.style.display = "block";
+          } else if (algorithm === "ges_causal") {
+              ges_causal_params.style.display = "block";
+          }
+      }
+    </script>
+{% endblock %}

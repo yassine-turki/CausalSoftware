@@ -185,17 +185,23 @@ algorithm_selected = sys.argv[2]
 
 dataframe, data, labels = load_and_check_data(data_file_path, dropna = False, drop_objects = False)
 
-if algorithm_selected == "pc_gcastle":
-    graph = run_pc_gcastle(data, labels, variant="original", alpha=0.05, ci_test="fisherz", priori_knowledge=None)
-elif algorithm_selected == "pc_causal":
-    graph = run_pc_causal_learn(data, labels, alpha=0.05, indep_test='fisherz', stable=True, uc_rule=0, uc_priority=2, mvpc=False, correction_name='MV_Crtn_Fisher_Z', background_knowledge=None, verbose=False, show_progress=True)
-elif algorithm_selected == "ges_gcastle":
-    graph = run_ges_gcastle(data, criterion='bic', method='scatter', k=0.001, N=10)
-elif algorithm_selected == "ges_causal":
-    graph = run_ges_causal_learn(data, score_func = "local_score_BIC", maxP = None, parameters = None)
+try:
+    # Algorithm selection and graph drawing
+    if algorithm_selected == "pc_gcastle":
+        graph = run_pc_gcastle(data, labels, variant="original", alpha=0.05, ci_test="fisherz", priori_knowledge=None)
+    elif algorithm_selected == "pc_causal":
+        graph = run_pc_causal_learn(data, labels, alpha=0.05, indep_test='fisherz', stable=True, uc_rule=0, uc_priority=2, mvpc=False, correction_name='MV_Crtn_Fisher_Z', background_knowledge=None, verbose=False, show_progress=True)
+    elif algorithm_selected == "ges_gcastle":
+        graph = run_ges_gcastle(data, criterion='bic', method='scatter', k=0.001, N=10)
+    elif algorithm_selected == "ges_causal":
+        graph = run_ges_causal_learn(data, score_func="local_score_BIC", maxP=None, parameters=None)
 
-graph_list = [algorithm_selected, graph]
-draw_graph(graph_list, labels, "static\image.png")
+    graph_list = [algorithm_selected, graph]
+    draw_graph(graph_list, labels, "static\image.png")
+
+except Exception as e:
+    with open("error.txt", "w") as error_file:
+        error_file.write("-"+str(e) + "\n")
 
 # Save graph_list to a pickle file
 with open('graph_list.pkl', 'wb') as pickle_file:

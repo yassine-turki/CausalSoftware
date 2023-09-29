@@ -106,53 +106,53 @@ def run_script():
 
     if 'datasets' in request.form:
         # if on index.html, read dataset chosen
-        selected_option1 = request.form['datasets']
-        userdata["dataset"] = selected_option1
+        selected_dataset = request.form['datasets']
+        userdata["dataset"] = selected_dataset
     else:
         # if on graph.html, use saved dataset for user
-        selected_option1 = userdata["dataset"]
+        selected_dataset = userdata["dataset"]
 
     if 'algorithm' in request.form:
         # if on index.html, read algorithm chosen
-        selected_option2 = request.form['algorithm']
-        userdata["algorithm"] = selected_option2
+        selected_algorithm = request.form['algorithm']
+        userdata["algorithm"] = selected_algorithm
     else:
         # if on graph.html, use saved algorithm for user
-        selected_option2 = userdata["algorithm"]
+        selected_algorithm = userdata["algorithm"]
 
     if "graph_operations" not in userdata:
         userdata["graph_operations"] = []
 
-    selected_option3 = ''
-    selected_option4 = ''
-    selected_option5 = ''
-    selected_option6 = ''
+    selected_starting_edge_add = ''
+    selected_ending_edge_add = ''
+    selected_starting_edge_delete = ''
+    selected_ending_edge_delete = ''
 
     if  'add_edge_start' in request.form:   
-        selected_option3 = request.form['add_edge_start']
-        print(selected_option3)
+        selected_starting_edge_add = request.form['add_edge_start']
+        print(selected_starting_edge_add)
     if  'add_edge_end' in request.form: 
-        selected_option4 = request.form['add_edge_end']
+        selected_ending_edge_add = request.form['add_edge_end']
     if  'delete_edge_start' in request.form:   
-        selected_option5 = request.form['delete_edge_start']
-        print(selected_option5)
+        selected_starting_edge_delete = request.form['delete_edge_start']
+        print(selected_starting_edge_delete)
     if  'delete_edge_end' in request.form: 
-        selected_option6 = request.form['delete_edge_end']
-        print(selected_option6)
+        selected_ending_edge_delete = request.form['delete_edge_end']
+        print(selected_ending_edge_delete)
 
-    if selected_option3 != '' and selected_option4 != '':
-        userdata["graph_operations"].append({"op": "add", "start": selected_option3, "end": selected_option4})
+    if selected_starting_edge_add != '' and selected_ending_edge_add != '':
+        userdata["graph_operations"].append({"op": "add", "start": selected_starting_edge_add, "end": selected_ending_edge_add})
 
-    if selected_option5 != '' and selected_option6 != '':
-        userdata["graph_operations"].append({"op": "delete", "start": selected_option5, "end": selected_option6})
+    if selected_starting_edge_delete != '' and selected_ending_edge_delete != '':
+        userdata["graph_operations"].append({"op": "delete", "start": selected_starting_edge_delete, "end": selected_ending_edge_delete})
 
     print(userdata)
 
     python_bin = "env\Scripts\python"
-    dataset_path = app.config['DATASET_FOLDER'] + "\\" + selected_option1 + "\\"
+    dataset_path = app.config['DATASET_FOLDER'] + "\\" + selected_dataset + "\\"
     print(dataset_path)
 
-    if userdata["algorithm"] == "pc_gcastle":    
+    if userdata["algorithm"] == "pc_gcastle":       
         subprocess.Popen([python_bin, 'generate_graph.py', dataset_path + userdata["dataset"] + ".csv", "pc_gcastle", json.dumps(userdata["graph_operations"])]).wait()
     elif userdata["algorithm"] == "pc_causal":
         subprocess.Popen([python_bin, 'generate_graph.py', dataset_path + userdata["dataset"] + ".csv", "pc_causal", json.dumps(userdata["graph_operations"])]).wait()
@@ -174,35 +174,35 @@ def run_metrics():
         app.config["userdata"] = {} 
     
     userdata = app.config["userdata"][session["name"]]
-    selected_option7 = ''
-    selected_option8 = ''
-    selected_option9 = ''
-    selected_option10 = ''
-    selected_option11 = ''
+    selected_library_metrics = ''
+    selected_treatment = ''
+    selected_outcome = ''
+    selected_estimator_NDE_NIE = ''
+    selected_method_name_ATE_ATC_ATT = ''
 
     if 'library_metrics' in request.form:
         # if on index.html, read dataset chosen
-        selected_option7 = request.form['library_metrics']
-        userdata["library_metrics"] = selected_option7
-        print(selected_option7)
+        selected_library_metrics = request.form['library_metrics']
+        userdata["library_metrics"] = selected_library_metrics
+        print(selected_library_metrics)
     if  'treatment' in request.form:   
-        selected_option8 = request.form['treatment']
-        userdata["treatment"] = selected_option8
-        print(selected_option8)
+        selected_treatment = request.form['treatment']
+        userdata["treatment"] = selected_treatment
+        print(selected_treatment)
     if  'outcome' in request.form: 
-        selected_option9 = request.form['outcome']
-        userdata["outcome"] = selected_option9
-        print(selected_option9)
+        selected_outcome = request.form['outcome']
+        userdata["outcome"] = selected_outcome
+        print(selected_outcome)
     if  'estimator' in request.form:   
-        selected_option10 = request.form['estimator']
-        userdata["estimator"] = selected_option10
-        print(selected_option10)
+        selected_estimator_NDE_NIE = request.form['estimator']
+        userdata["estimator"] = selected_estimator_NDE_NIE
+        print(selected_estimator_NDE_NIE)
     if  'method_name' in request.form:   
-        selected_option11 = request.form['method_name']
-        userdata["method_name"] = selected_option11
-        print(selected_option11)
+        selected_method_name_ATE_ATC_ATT = request.form['method_name']
+        userdata["method_name"] = selected_method_name_ATE_ATC_ATT
+        print(selected_method_name_ATE_ATC_ATT)
 
-    userdata["graph_operations"].append({"op": "metrics", "start": selected_option8, "end": selected_option9, "estimator": selected_option10})
+    userdata["graph_operations"].append({"op": "metrics", "start": selected_treatment, "end": selected_outcome, "estimator": selected_estimator_NDE_NIE})
     print(userdata)
     python_bin = "env\Scripts\python"
     dataset_path = app.config['DATASET_FOLDER'] + "\\" + userdata["dataset"] + "\\"
