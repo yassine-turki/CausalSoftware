@@ -24,7 +24,7 @@ from graphviz import Digraph
 """#Functions for PC"""
 
 
-def run_pc_gcastle(data, labels, variant="original", alpha=0.05, ci_test="fisherz", priori_knowledge=None):
+def run_pc_gcastle(data, labels, variant, alpha, ci_test, priori_knowledge):
   
   """Comments taken directly from gcastle library
   data: a numpy array

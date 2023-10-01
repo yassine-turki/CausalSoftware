@@ -11,6 +11,7 @@
   <br><br>
   <ul class="breadcrumb">
     <li><a href="../">Generator</a></li>
+    <li><a href="/run_data">Info Dataset</a></li>
     <li><a href="/run_script">Editor</a></li>
     <li>Metrics</a></li>
     <li style = "text-align: right;">
@@ -65,6 +66,11 @@
                 <div class="form-group mt-3">
                    <input type="submit" class="btn btn-block btn-primary btn-lg" value="Generate">
                 </div>
+                {% if print_message_metrics  %}
+                <div class="form-group mt-3">
+                  {{ print_message_metrics }}
+               </div>
+               {% endif %}
              </form>
           </div>  
        </div> 

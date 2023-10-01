@@ -92,8 +92,8 @@ small{
 }
 
 .generated_image{
-	max-width: 80px;
-	max-height: 80px;
+	width: inherit;
+	height: auto;
 }
 
 ul.breadcrumb {

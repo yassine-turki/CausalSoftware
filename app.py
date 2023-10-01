@@ -6,6 +6,7 @@ from werkzeug.utils import secure_filename
 import os
 import subprocess
 import json
+import pandas as pd
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
@@ -86,7 +87,13 @@ def upload_file():
       f = request.files['file']
       f.save(os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(f.filename)))
       return 'file uploaded successfully'
-   
+
+def optional_parameters(form_value):
+    if form_value == '':
+        return 'null'
+    else:
+        return form_value
+
 @app.route('/run_script', methods=['GET', 'POST'])
 def run_script():
     if request.method == 'GET':
@@ -130,15 +137,16 @@ def run_script():
 
     if  'add_edge_start' in request.form:   
         selected_starting_edge_add = request.form['add_edge_start']
-        print(selected_starting_edge_add)
+        
     if  'add_edge_end' in request.form: 
         selected_ending_edge_add = request.form['add_edge_end']
+
     if  'delete_edge_start' in request.form:   
         selected_starting_edge_delete = request.form['delete_edge_start']
-        print(selected_starting_edge_delete)
+        
     if  'delete_edge_end' in request.form: 
         selected_ending_edge_delete = request.form['delete_edge_end']
-        print(selected_ending_edge_delete)
+        
 
     if selected_starting_edge_add != '' and selected_ending_edge_add != '':
         userdata["graph_operations"].append({"op": "add", "start": selected_starting_edge_add, "end": selected_ending_edge_add})
@@ -146,20 +154,30 @@ def run_script():
     if selected_starting_edge_delete != '' and selected_ending_edge_delete != '':
         userdata["graph_operations"].append({"op": "delete", "start": selected_starting_edge_delete, "end": selected_ending_edge_delete})
 
-    print(userdata)
-
     python_bin = "env\Scripts\python"
     dataset_path = app.config['DATASET_FOLDER'] + "\\" + selected_dataset + "\\"
-    print(dataset_path)
 
-    if userdata["algorithm"] == "pc_gcastle":       
-        subprocess.Popen([python_bin, 'generate_graph.py', dataset_path + userdata["dataset"] + ".csv", "pc_gcastle", json.dumps(userdata["graph_operations"])]).wait()
+    if userdata["algorithm"] == "pc_gcastle":  
+
+        pc_tiers = optional_parameters(request.form["pc_tiers"])
+        subprocess.Popen([python_bin, 'generate_graph.py', dataset_path + userdata["dataset"] + ".csv", "pc_gcastle", json.dumps(userdata["graph_operations"]), request.form["pc_variant"], request.form["pc_alpha"], request.form["pc_ci_test"], pc_tiers]).wait()
+
     elif userdata["algorithm"] == "pc_causal":
-        subprocess.Popen([python_bin, 'generate_graph.py', dataset_path + userdata["dataset"] + ".csv", "pc_causal", json.dumps(userdata["graph_operations"])]).wait()
+
+        pc_tiers = optional_parameters(request.form["pc_tiers"])
+        subprocess.Popen([python_bin, 'generate_graph.py', dataset_path + userdata["dataset"] + ".csv", "pc_causal", json.dumps(userdata["graph_operations"]), request.form["pc_alpha_cl"], request.form["pc_indep_test"], json.dumps(request.form.get("pc_stable")), request.form["pc_uc_rule"], request.form["pc_uc_priority"], json.dumps(request.form.get("pc_mvpc")), request.form["pc_correction_name"], pc_tiers]).wait()
+
     elif userdata["algorithm"] == "ges_gcastle":
-        subprocess.Popen([python_bin, 'generate_graph.py', dataset_path + userdata["dataset"] + ".csv", "ges_gcastle", json.dumps(userdata["graph_operations"])]).wait()
+        subprocess.Popen([python_bin, 'generate_graph.py', dataset_path + userdata["dataset"] + ".csv", "ges_gcastle", json.dumps(userdata["graph_operations"]), request.form["ges_criterion"], request.form["ges_method"], request.form["ges_k"], request.form["ges_N"]]).wait()
+
     elif userdata["algorithm"] == "ges_causal":
-        subprocess.Popen([python_bin, 'generate_graph.py', dataset_path + userdata["dataset"] + ".csv", "ges_causal", json.dumps(userdata["graph_operations"])]).wait()
+
+        ges_maxP = optional_parameters(request.form["ges_maxP"])
+        ges_parameters_kfold = optional_parameters(request.form["ges_parameters_kfold"])
+        ges_parameters_lambda = optional_parameters(request.form["ges_parameters_lambda"])
+        ges_parameters_dlabel = optional_parameters(request.form["ges_parameters_dlabel"])
+        subprocess.Popen([python_bin, 'generate_graph.py', dataset_path + userdata["dataset"] + ".csv", "ges_causal", json.dumps(userdata["graph_operations"]), request.form["ges_score_func"], ges_maxP, ges_parameters_kfold, ges_parameters_lambda, ges_parameters_dlabel]).wait()
+
     else:
         print("Option doesn't exist.")
 
@@ -168,7 +186,16 @@ def run_script():
 @app.route('/run_metrics', methods=['POST', 'GET'])
 def run_metrics():
     if request.method == 'GET':
-        return render_template('metrics.html')
+        print_message_metrics = None
+        #checking if estimates.txt is not empty
+        with open("estimates.txt","r") as estimates_file: 
+            print_message_metrics = "".join(estimates_file.readlines())
+        if os.path.exists("estimates.txt"):
+        # Open "estimates.txt" in write mode to clear its content
+            with open("estimates.txt", "w"):
+                pass
+        return render_template('metrics.html', print_message_metrics = print_message_metrics)
+        
     
     if "userdata" not in app.config:
         app.config["userdata"] = {} 
@@ -184,26 +211,25 @@ def run_metrics():
         # if on index.html, read dataset chosen
         selected_library_metrics = request.form['library_metrics']
         userdata["library_metrics"] = selected_library_metrics
-        print(selected_library_metrics)
+        
     if  'treatment' in request.form:   
         selected_treatment = request.form['treatment']
         userdata["treatment"] = selected_treatment
-        print(selected_treatment)
+        
     if  'outcome' in request.form: 
         selected_outcome = request.form['outcome']
         userdata["outcome"] = selected_outcome
-        print(selected_outcome)
+        
     if  'estimator' in request.form:   
         selected_estimator_NDE_NIE = request.form['estimator']
         userdata["estimator"] = selected_estimator_NDE_NIE
-        print(selected_estimator_NDE_NIE)
+        
     if  'method_name' in request.form:   
         selected_method_name_ATE_ATC_ATT = request.form['method_name']
         userdata["method_name"] = selected_method_name_ATE_ATC_ATT
-        print(selected_method_name_ATE_ATC_ATT)
+        
 
     userdata["graph_operations"].append({"op": "metrics", "start": selected_treatment, "end": selected_outcome, "estimator": selected_estimator_NDE_NIE})
-    print(userdata)
     python_bin = "env\Scripts\python"
     dataset_path = app.config['DATASET_FOLDER'] + "\\" + userdata["dataset"] + "\\"
     
@@ -214,11 +240,33 @@ def run_metrics():
         proc.wait()
         with open("error.txt","r") as error_file: 
             popup_message_metrics = "".join(error_file.readlines())
+        # Check if "error.txt" file exists
+        if os.path.exists("error.txt"):
+            # Open "error.txt" in write mode to clear its content
+            with open("error.txt", "w"):
+                pass
     else:
         print("Option doesn't exist.")
     session["popup_message"] = popup_message_metrics
 
     return redirect("/run_metrics")
+
+@app.route('/run_data', methods = ['POST', 'GET'])
+def run_data():
+    userdata = app.config["userdata"][session["name"]]
+
+    if request.method == 'POST' and 'datasets' in request.form:
+        # if on index.html, read dataset chosen
+        selected_dataset = request.form['datasets']
+        userdata["dataset"] = selected_dataset
+    
+    else:
+        selected_dataset = userdata["dataset"]
+
+    dataset_path = app.config['DATASET_FOLDER'] + "\\" + selected_dataset + "\\"
+    df = pd.read_csv(dataset_path + selected_dataset + ".csv")
+    summary_stats = df.describe().to_html(classes='table table-striped table-bordered table-sm')
+    return render_template('summary.html', summary_stats=summary_stats)  
 
 @app.route('/image', methods=['GET'])
 def get_image():

@@ -454,17 +454,19 @@ with open('graph_list.pkl', 'rb') as pickle_file:
 file_path = sys.argv[1]
 dowhy_data, _, _ = load_and_check_data(file_path)
 
-# Check if "error.txt" file exists
-if os.path.exists("error.txt"):
-    # Open "error.txt" in write mode to clear its content
-    with open("error.txt", "w"):
+# Check if "estimates.txt" file exists
+if os.path.exists("estimates.txt"):
+    # Open "estimates.txt" in write mode to clear its content
+    with open("estimates.txt", "w"):
         pass
 
 # ATT, ATC, ATE
 newfile = "w"
 try:
     dict_of_estimates = compute_estimates_dowhy(graph_list, dowhy_data, treatment = sys.argv[2], outcome = sys.argv[3], method_name = sys.argv[5])
-    print(dict_of_estimates)
+    with open("estimates.txt", newfile) as estimates_file:
+        estimates_file.write(str(dict_of_estimates) + "\n")
+        newfile = "a"
 except Exception as e:
     with open("error.txt", newfile) as error_file:
         error_file.write("-"+str(e) + "\n")
@@ -473,7 +475,9 @@ except Exception as e:
 #Direct Effect
 try:
     direct_effect = compute_direct_effect_dowhy(graph_list, dowhy_data, treatment = sys.argv[2], outcome = sys.argv[3], estimator = sys.argv[4])
-    print("Direct effect from treatment to outcome =", direct_effect)
+    with open("estimates.txt", newfile) as estimates_file:
+        estimates_file.write("Direct effect: " + str(direct_effect) + "\n")
+        newfile = "a"
 except Exception as e:
     with open("error.txt", newfile) as error_file:
         error_file.write("-"+str(e) + "\n")
@@ -484,7 +488,9 @@ except Exception as e:
 #Indirect Effect
 try:
     indirect_effect = compute_indirect_effect_dowhy(graph_list, dowhy_data, treatment = sys.argv[2], outcome = sys.argv[3], estimator = sys.argv[4])
-    print("Indirect effect from treatment to outcome =", indirect_effect)
+    with open("estimates.txt", newfile) as estimates_file:
+        estimates_file.write("Indirect effect: " + str(indirect_effect) + "\n")
+        newfile = "a"
 except Exception as e:
     with open("error.txt", "a") as error_file:
         error_file.write("-"+str(e) + "\n")

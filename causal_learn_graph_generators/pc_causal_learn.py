@@ -20,7 +20,7 @@ from graphviz import Digraph
 
 
 
-def run_pc_causal_learn(data,labels,alpha=0.05, indep_test='fisherz', stable=True, uc_rule=0, uc_priority=2, mvpc=False, correction_name='MV_Crtn_Fisher_Z', background_knowledge=None, verbose=False, show_progress=True):
+def run_pc_causal_learn(data,labels,alpha, indep_test, stable, uc_rule, uc_priority, mvpc, correction_name, background_knowledge, verbose=False, show_progress=True):
 
   """ Comments taken directly from causal learn library
   

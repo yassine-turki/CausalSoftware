@@ -28,6 +28,8 @@ from causallearn.utils.PCUtils.BackgroundKnowledgeOrientUtils import \
 import os
 os.environ['CASTLE_BACKEND'] = 'pytorch'
 
+import traceback
+
 from collections import OrderedDict
 import castle
 from castle.common import GraphDAG
@@ -188,18 +190,36 @@ dataframe, data, labels = load_and_check_data(data_file_path, dropna = False, dr
 try:
     # Algorithm selection and graph drawing
     if algorithm_selected == "pc_gcastle":
-        graph = run_pc_gcastle(data, labels, variant="original", alpha=0.05, ci_test="fisherz", priori_knowledge=None)
-    elif algorithm_selected == "pc_causal":
-        graph = run_pc_causal_learn(data, labels, alpha=0.05, indep_test='fisherz', stable=True, uc_rule=0, uc_priority=2, mvpc=False, correction_name='MV_Crtn_Fisher_Z', background_knowledge=None, verbose=False, show_progress=True)
+        graph = run_pc_gcastle(data, labels, variant = sys.argv[4], alpha = float(sys.argv[5]), ci_test = sys.argv[6], priori_knowledge = json.loads(sys.argv[7]))
+
+    elif algorithm_selected == "pc_causal": 
+        graph = run_pc_causal_learn(data, labels, alpha = float(sys.argv[4]), indep_test = sys.argv[5], stable = bool(json.loads(sys.argv[6])), uc_rule = int(sys.argv[7]), uc_priority = int(sys.argv[8]), mvpc = bool(json.loads(sys.argv[9])), correction_name = sys.argv[10], background_knowledge = json.loads(sys.argv[11]), verbose=False, show_progress=True)
+
     elif algorithm_selected == "ges_gcastle":
-        graph = run_ges_gcastle(data, criterion='bic', method='scatter', k=0.001, N=10)
+        graph = run_ges_gcastle(data, criterion = sys.argv[4], method = sys.argv[5], k = float(sys.argv[6]), N = int(sys.argv[7]))
+
     elif algorithm_selected == "ges_causal":
-        graph = run_ges_causal_learn(data, score_func="local_score_BIC", maxP=None, parameters=None)
+
+        if json.loads(sys.argv[5]) != None:
+            parameter_maxP = int(json.loads(sys.argv[5]))
+
+        optional_parameters = {}
+        if json.loads(sys.argv[6]) != None:
+            optional_parameters["kfold"] = int(json.loads(sys.argv[6]))
+
+        if json.loads(sys.argv[7]) != None:
+            optional_parameters["lambda"] = float(json.loads(sys.argv[7]))
+
+        if json.loads(sys.argv[8]) != None:
+            optional_parameters["dlabel"] = int(json.loads(sys.argv[8]))
+
+        graph = run_ges_causal_learn(data, score_func = sys.argv[4], maxP = parameter_maxP, parameters = optional_parameters)
 
     graph_list = [algorithm_selected, graph]
     draw_graph(graph_list, labels, "static\image.png")
 
 except Exception as e:
+    traceback.print_exc()
     with open("error.txt", "w") as error_file:
         error_file.write("-"+str(e) + "\n")
 
