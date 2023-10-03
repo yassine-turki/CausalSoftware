@@ -28,6 +28,15 @@ class Todo(db.Model):
 
     def __repr__(self):
         return '<Task %r>' % self.id
+    
+def get_datasets():
+    dataset_folder = app.config["DATASET_FOLDER"]
+    datasets = []
+
+    if os.path.exists(dataset_folder) and os.path.isdir(dataset_folder):
+        datasets = [folder for folder in os.listdir(dataset_folder) if os.path.isdir(os.path.join(dataset_folder, folder))]
+    print(datasets)
+    return datasets
 
 @app.route('/', methods=['GET'])
 def index():
@@ -44,11 +53,12 @@ def index():
         app.config["userdata"][session["name"]] = {}
 
     # tasks = Todo.query.order_by(Todo.date_created).all()
+    datasets = get_datasets()
     is_image = False
     if os.path.isfile(app.config["IMAGE_UPLOADS"] + "image.png"):
         is_image = True
     #print(is_image)
-    return render_template('index.html',uploaded_image = app.config["IMAGE_UPLOADS"] + "image.png", is_image = is_image)
+    return render_template('index.html',uploaded_image = app.config["IMAGE_UPLOADS"] + "image.png", is_image = is_image, datasets = datasets)
 
 @app.route('/delete/<int:id>')
 def delete(id):
