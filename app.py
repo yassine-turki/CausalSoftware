@@ -180,6 +180,17 @@ def run_script():
 
     else:
         print("Option doesn't exist.")
+    
+    #Error handling 
+    popup_message_graph = ''
+    with open("error.txt","r") as error_file: 
+        popup_message_graph = "".join(error_file.readlines())
+    # Check if "error.txt" file exists
+    if os.path.exists("error.txt"):
+        # Open "error.txt" in write mode to clear its content
+        with open("error.txt", "w"):
+            pass
+    session["popup_message"] = popup_message_graph
 
     return redirect("/run_script")
 

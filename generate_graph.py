@@ -129,9 +129,10 @@ def add_path(graph_list, labels, path_to_add):
     graph = graph_list[1]
 
     column_to_index = {col: i for i, col in enumerate(labels)}
-    if path_to_add[0] not in column_to_index.keys() or path_to_add[1] not in column_to_index.keys():
-        print("Error: given path is not in the labels for the data")
-        return graph
+    if path_to_add[0] not in column_to_index.keys() : 
+        raise ValueError(path_to_add[0]+" variable is not in the data")
+    if path_to_add[1] not in column_to_index.keys():
+        raise ValueError(path_to_add[1]+" variable is not in the data")
 
     node1_index = column_to_index[path_to_add[0]]
     node2_index = column_to_index[path_to_add[1]]
@@ -164,9 +165,10 @@ def delete_path(graph_list, labels, path_to_delete):
 
     column_to_index = {col: i for i, col in enumerate(labels)}
 
-    if path_to_delete[0] not in column_to_index.keys() or path_to_delete[1] not in column_to_index.keys():
-        print("Error: given path is not in the labels for the data")
-        return graph
+    if path_to_delete[0] not in column_to_index.keys() : 
+        raise ValueError(path_to_delete[0]+" variable is not in the data")
+    if path_to_delete[1] not in column_to_index.keys():
+        raise ValueError(path_to_delete[1]+" variable is not in the data")
 
     node1_index = column_to_index[path_to_delete[0]]
     node2_index = column_to_index[path_to_delete[1]]
@@ -217,12 +219,12 @@ try:
 
     graph_list = [algorithm_selected, graph]
     draw_graph(graph_list, labels, "static\image.png")
+    # Save graph_list to a pickle file
+    with open('graph_list.pkl', 'wb') as pickle_file:
+        pickle.dump(graph_list, pickle_file)
 
 except Exception as e:
     traceback.print_exc()
     with open("error.txt", "w") as error_file:
         error_file.write("-"+str(e) + "\n")
 
-# Save graph_list to a pickle file
-with open('graph_list.pkl', 'wb') as pickle_file:
-    pickle.dump(graph_list, pickle_file)
