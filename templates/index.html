@@ -53,7 +53,7 @@
                         <br><br>
                         <br>
                         <label for="algorithm" style="font-weight: bold;">Now, choose the algorithm:</label>
-                        <select name="algorithm" id="algorithm" onchange="showAlgorithmParameters(),setDefaultAlgorithmParameters() ">
+                        <select name="algorithm" id="algorithm" onchange="showAlgorithmParameters(),setDefaultAlgorithmParameters()">
                           
                             <option value="pc_gcastle">PC Gcastle</option>
                             <option value="pc_causal">PC CausalLearn</option>
@@ -87,9 +87,9 @@
                               </select>
                           </div>
                           <div class="form-group">
-                              <label class="param-label" for="pc_tiers">Tiers:</label>
-                              <textarea class="param-input" name="pc_tiers" id="pc_tiers" rows="3"></textarea>
-                              <small class="form-text text-muted">Enter tiers as a list of lists, e.g., [["income", "relationship"],["Sex", "workclass"]].</small>
+                              <label class="param-label" for="pc_gcastle_tiers">Tiers:</label>
+                              <textarea class="param-input" name="pc_gcastle_tiers" id="pc_gcastle_tiers" rows="3"></textarea>
+                              <small class="form-text text-muted">Enter tiers as a list of lists, e.g., [[income, relationship],[Sex, workclass]].</small>
                           </div>
                       </div>
 
@@ -115,9 +115,9 @@
                             <input class="param-input" type="checkbox" name="pc_stable" id="pc_stable">
                         </div>
                         <div class="form-group">
-                          <label class="param-label" for="pc_tiers">Tiers:</label>
-                          <textarea class="param-input" name="pc_tiers" id="pc_tiers" rows="3"></textarea>
-                          <small class="form-text text-muted">Enter tiers as a list of lists, e.g., [["income", "relationship"],["Sex", "workclass"]].</small>
+                          <label class="param-label" for="pc_causal_tiers">Tiers:</label>
+                          <textarea class="param-input" name="pc_causal_tiers" id="pc_causal_tiers" rows="3"></textarea>
+                          <small class="form-text text-muted">Enter tiers as a list of lists, e.g., [[income, relationship],[Sex, workclass]].</small>
                       </div>
                         <div class="form-group">
                             <label class="param-label" for="pc_uc_rule">UC Rule:</label>
@@ -237,11 +237,12 @@ You are not registered. <a href="/login">login</a>.
               document.getElementById("pc_variant").value = "original";
               document.getElementById("pc_alpha").value = "0.05";
               document.getElementById("pc_ci_test").value = "fisherz";
-              document.getElementById("pc_tiers").value = '';
+              document.getElementById("pc_gcastle_tiers").value = '';
           } else if (algorithm === "pc_causal") {
               document.getElementById("pc_alpha_cl").value = "0.05";
               document.getElementById("pc_indep_test").value = "fisherz";
               document.getElementById("pc_stable").checked = true;
+              document.getElementById("pc_causal_tiers").value = '';
               document.getElementById("pc_uc_rule").value = "0";
               document.getElementById("pc_uc_priority").value = "2";
               document.getElementById("pc_mvpc").checked = false;

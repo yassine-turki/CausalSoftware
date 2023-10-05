@@ -7,6 +7,7 @@ import os
 import subprocess
 import json
 import pandas as pd
+import pickle
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
@@ -35,7 +36,7 @@ def get_datasets():
 
     if os.path.exists(dataset_folder) and os.path.isdir(dataset_folder):
         datasets = [folder for folder in os.listdir(dataset_folder) if os.path.isdir(os.path.join(dataset_folder, folder))]
-    print(datasets)
+
     return datasets
 
 @app.route('/', methods=['GET'])
@@ -99,10 +100,34 @@ def upload_file():
       return 'file uploaded successfully'
 
 def optional_parameters(form_value):
-    if form_value == '':
+    try : 
+        if form_value == "pc_stable" or form_value == "pc_mvpc":
+            value = request.form.get(form_value)
+        else:
+            value = request.form[form_value]
+        if form_value == "pc_causal_tiers" or form_value =='pc_gcastle_tiers' :
+            print("this is the tiers")
+            print(value)
+        if value == '':
+            return 'null'
+        else:
+            return value
+    except Exception as e:
         return 'null'
-    else:
-        return form_value
+
+# Load graph_operations from a pickle file
+def load_graph_operations():
+    try:
+        with open('graph_operations.pkl', 'rb') as pickle_file:
+            return pickle.load(pickle_file)
+    except FileNotFoundError:
+        return []
+
+# Write graph_operations to a pickle file
+def write_graph_operations(graph_operations):
+    with open('graph_operations.pkl', 'wb') as pickle_file:
+        pickle.dump(graph_operations, pickle_file)
+
 
 @app.route('/run_script', methods=['GET', 'POST'])
 def run_script():
@@ -139,6 +164,7 @@ def run_script():
 
     if "graph_operations" not in userdata:
         userdata["graph_operations"] = []
+        write_graph_operations(userdata["graph_operations"])
 
     selected_starting_edge_add = ''
     selected_ending_edge_add = ''
@@ -159,34 +185,47 @@ def run_script():
         
 
     if selected_starting_edge_add != '' and selected_ending_edge_add != '':
-        userdata["graph_operations"].append({"op": "add", "start": selected_starting_edge_add, "end": selected_ending_edge_add})
+        graph_operations = load_graph_operations()
+        # Modify the data (add a new operation)
+        new_operation = {"op": "add", "start": selected_starting_edge_add, "end": selected_ending_edge_add}
+        graph_operations.append(new_operation)
+        # Write the modified data back to the pickle file
+        write_graph_operations(graph_operations)
+        userdata["graph_operations"] = load_graph_operations()
+
 
     if selected_starting_edge_delete != '' and selected_ending_edge_delete != '':
-        userdata["graph_operations"].append({"op": "delete", "start": selected_starting_edge_delete, "end": selected_ending_edge_delete})
+        graph_operations = load_graph_operations()
+        # Modify the data (add a new operation)
+        new_operation = {"op": "delete", "start": selected_starting_edge_delete, "end": selected_ending_edge_delete}
+        graph_operations.append(new_operation)
+        # Write the modified data back to the pickle file
+        write_graph_operations(graph_operations)
+        userdata["graph_operations"] = load_graph_operations()
 
     python_bin = "env\Scripts\python"
     dataset_path = app.config['DATASET_FOLDER'] + "\\" + selected_dataset + "\\"
 
     if userdata["algorithm"] == "pc_gcastle":  
+        pc_tiers = optional_parameters("pc_gcastle_tiers")
+        subprocess.Popen([python_bin, 'generate_graph.py', dataset_path + userdata["dataset"] + ".csv", "pc_gcastle", json.dumps(userdata["graph_operations"]), optional_parameters("pc_variant"), optional_parameters("pc_alpha"), optional_parameters("pc_ci_test"), pc_tiers]).wait()
 
-        pc_tiers = optional_parameters(request.form["pc_tiers"])
-        subprocess.Popen([python_bin, 'generate_graph.py', dataset_path + userdata["dataset"] + ".csv", "pc_gcastle", json.dumps(userdata["graph_operations"]), request.form["pc_variant"], request.form["pc_alpha"], request.form["pc_ci_test"], pc_tiers]).wait()
 
     elif userdata["algorithm"] == "pc_causal":
 
-        pc_tiers = optional_parameters(request.form["pc_tiers"])
-        subprocess.Popen([python_bin, 'generate_graph.py', dataset_path + userdata["dataset"] + ".csv", "pc_causal", json.dumps(userdata["graph_operations"]), request.form["pc_alpha_cl"], request.form["pc_indep_test"], json.dumps(request.form.get("pc_stable")), request.form["pc_uc_rule"], request.form["pc_uc_priority"], json.dumps(request.form.get("pc_mvpc")), request.form["pc_correction_name"], pc_tiers]).wait()
+        pc_tiers = optional_parameters("pc_causal_tiers")
+        subprocess.Popen([python_bin, 'generate_graph.py', dataset_path + userdata["dataset"] + ".csv", "pc_causal", json.dumps(userdata["graph_operations"]), optional_parameters("pc_alpha_cl"), optional_parameters("pc_indep_test"), json.dumps(optional_parameters("pc_stable")), optional_parameters("pc_uc_rule"), optional_parameters("pc_uc_priority"), json.dumps(optional_parameters("pc_mvpc")), optional_parameters("pc_correction_name"), pc_tiers]).wait()
 
     elif userdata["algorithm"] == "ges_gcastle":
-        subprocess.Popen([python_bin, 'generate_graph.py', dataset_path + userdata["dataset"] + ".csv", "ges_gcastle", json.dumps(userdata["graph_operations"]), request.form["ges_criterion"], request.form["ges_method"], request.form["ges_k"], request.form["ges_N"]]).wait()
+        subprocess.Popen([python_bin, 'generate_graph.py', dataset_path + userdata["dataset"] + ".csv", "ges_gcastle", json.dumps(userdata["graph_operations"]), optional_parameters("ges_criterion"), optional_parameters("ges_method"), optional_parameters("ges_k"), optional_parameters("ges_N")]).wait()
 
     elif userdata["algorithm"] == "ges_causal":
 
-        ges_maxP = optional_parameters(request.form["ges_maxP"])
-        ges_parameters_kfold = optional_parameters(request.form["ges_parameters_kfold"])
-        ges_parameters_lambda = optional_parameters(request.form["ges_parameters_lambda"])
-        ges_parameters_dlabel = optional_parameters(request.form["ges_parameters_dlabel"])
-        subprocess.Popen([python_bin, 'generate_graph.py', dataset_path + userdata["dataset"] + ".csv", "ges_causal", json.dumps(userdata["graph_operations"]), request.form["ges_score_func"], ges_maxP, ges_parameters_kfold, ges_parameters_lambda, ges_parameters_dlabel]).wait()
+        ges_maxP = optional_parameters("ges_maxP")
+        ges_parameters_kfold = optional_parameters("ges_parameters_kfold")
+        ges_parameters_lambda = optional_parameters("ges_parameters_lambda")
+        ges_parameters_dlabel = optional_parameters("ges_parameters_dlabel")
+        subprocess.Popen([python_bin, 'generate_graph.py', dataset_path + userdata["dataset"] + ".csv", "ges_causal", json.dumps(userdata["graph_operations"]), optional_parameters("ges_score_func"), ges_maxP, ges_parameters_kfold, ges_parameters_lambda, ges_parameters_dlabel]).wait()
 
     else:
         print("Option doesn't exist.")
@@ -249,8 +288,13 @@ def run_metrics():
         selected_method_name_ATE_ATC_ATT = request.form['method_name']
         userdata["method_name"] = selected_method_name_ATE_ATC_ATT
         
-
-    userdata["graph_operations"].append({"op": "metrics", "start": selected_treatment, "end": selected_outcome, "estimator": selected_estimator_NDE_NIE})
+    graph_operations = load_graph_operations()
+    # Modify the data (add a new operation)
+    new_operation = {"op": "metrics", "start": selected_treatment, "end": selected_outcome, "estimator": selected_estimator_NDE_NIE}
+    graph_operations.append(new_operation)
+    # Write the modified data back to the pickle file
+    write_graph_operations(graph_operations)
+    userdata["graph_operations"] = load_graph_operations()
     python_bin = "env\Scripts\python"
     dataset_path = app.config['DATASET_FOLDER'] + "\\" + userdata["dataset"] + "\\"
     
@@ -313,6 +357,43 @@ def login():
 @app.route("/logout")
 def logout():
     session["name"] = None
+    graph_generated_by_user = 'graph_list.pkl'
+    graph_hyper_parameters = "graph_hyper_parameters.pkl"
+    graph_operations = "graph_operations.pkl"
+    data_by_user = "data_file_path.pkl"
+
+    try:
+        if os.path.exists(graph_generated_by_user):
+            os.remove(graph_generated_by_user)
+    except FileNotFoundError:
+        pass
+
+    try:
+        if os.path.exists(graph_hyper_parameters):
+            os.remove(graph_hyper_parameters)
+    except FileNotFoundError:
+        pass
+
+    try:
+        if os.path.exists(graph_hyper_parameters):
+            os.remove(graph_hyper_parameters)
+    except FileNotFoundError:
+        pass    
+
+    try:
+        if os.path.exists(data_by_user):
+            os.remove(data_by_user)
+    except FileNotFoundError:
+        pass   
+
+    try:
+        if os.path.exists(graph_operations):
+            os.remove(graph_operations)
+    except FileNotFoundError:
+        pass  
+
+    
+
     return redirect("/")
 
 if __name__ == "__main__":
