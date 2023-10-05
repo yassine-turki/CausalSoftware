@@ -38,16 +38,9 @@
                     <div class="form-group">
                         <label for="datasets" style="font-weight: bold;">Or choose an existing dataset:</label>
                         <select name="datasets" id="datasets">
-                            <option value="adult">Adult</option>
-                            <option value="boston">Boston</option>
-                            <option value="census">Dutch Census</option>
-                            <option value="compas">Compas</option>
-                            <option value="cards">Credit Cards</option>
-                            <option value="crimes">Crime rates</option>
-                            <option value="fico">FICO</option>
-                            <option value="lalonde">La Londe</option>
-                            <option value="lawschool">Law School</option>
-                            <option value="police">Police Arrest</option>
+                            {% for dataset in datasets %}
+                            <option value="{{ dataset }}">{{ dataset }}</option>
+                            {% endfor %}
                         </select>
                         <input type="submit" formaction="/run_data" class="btn btn-block btn-primary btn-lg" value="Info" />
                         <br><br>
