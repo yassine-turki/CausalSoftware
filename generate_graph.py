@@ -140,19 +140,25 @@ def add_path(graph_list, labels, path_to_add):
     node1_index = column_to_index[path_to_add[0]]
     node2_index = column_to_index[path_to_add[1]]
 
-    if algorithm_used == "pc_gcastle" or algorithm_used == "ges_gcastle":
-        graph.causal_matrix[node1_index, node2_index] = 1
-    elif algorithm_used == "pc_causal":
-        if graph.G.graph[node1_index, node2_index] == 0:
-            graph.G.graph[node2_index, node1_index] = 1
-        graph.G.graph[node1_index, node2_index] = -1   
+    try:
+        if algorithm_used == "pc_gcastle" or algorithm_used == "ges_gcastle":
+            graph.causal_matrix[node1_index, node2_index] = 1
+        elif algorithm_used == "pc_causal":
+            if graph.G.graph[node1_index, node2_index] == 0:
+                graph.G.graph[node2_index, node1_index] = 1
+            graph.G.graph[node1_index, node2_index] = -1   
 
-    elif algorithm_used == "ges_causal":
-        if graph["G"].graph[node1_index, node2_index] == 0:
-            graph["G"].graph[node2_index, node1_index] = 1
-        graph["G"].graph[node1_index, node2_index] = -1
+        elif algorithm_used == "ges_causal":
+            if graph["G"].graph[node1_index, node2_index] == 0:
+                graph["G"].graph[node2_index, node1_index] = 1
+            graph["G"].graph[node1_index, node2_index] = -1
 
-    return graph
+        return graph
+
+    except Exception as e:
+        with open("error.txt", "w") as error_file:
+            error_file.write("-"+str(e) + "\n")
+        return graph
 
 
     
@@ -178,23 +184,28 @@ def delete_path(graph_list, labels, path_to_delete):
 
     node1_index = column_to_index[path_to_delete[0]]
     node2_index = column_to_index[path_to_delete[1]]
+    try:
+        if algorithm_used == "pc_gcastle" or algorithm_used == "ges_gcastle":
+            graph.causal_matrix[node1_index, node2_index] = 0
+        elif algorithm_used == "pc_causal":
+            if graph.G.graph[node1_index, node2_index] == -1 and graph.G.graph[node2_index, node1_index] == -1: #undirected path
+                graph.G.graph[node1_index, node2_index] = 1
+            else:
+                graph.G.graph[node1_index, node2_index] = 0
+                graph.G.graph[node2_index, node1_index] = 0        
+        elif algorithm_used == "ges_causal":
+            if graph["G"].graph[node1_index, node2_index] == -1 and graph["G"].graph[node2_index, node1_index] == -1: #undirected path
+                graph["G"].graph[node1_index, node2_index] = 1
+            else:
+                graph["G"].graph[node1_index, node2_index] = 0
+                graph["G"].graph[node2_index, node1_index] = 0
 
-    if algorithm_used == "pc_gcastle" or algorithm_used == "ges_gcastle":
-        graph.causal_matrix[node1_index, node2_index] = 0
-    elif algorithm_used == "pc_causal":
-        if graph.G.graph[node1_index, node2_index] == -1 and graph.G.graph[node2_index, node1_index] == -1: #undirected path
-            graph.G.graph[node1_index, node2_index] = 1
-        else:
-            graph.G.graph[node1_index, node2_index] = 0
-            graph.G.graph[node2_index, node1_index] = 0        
-    elif algorithm_used == "ges_causal":
-        if graph["G"].graph[node1_index, node2_index] == -1 and graph["G"].graph[node2_index, node1_index] == -1: #undirected path
-            graph["G"].graph[node1_index, node2_index] = 1
-        else:
-            graph["G"].graph[node1_index, node2_index] = 0
-            graph["G"].graph[node2_index, node1_index] = 0
+        return graph
+    except Exception as e:
+        with open("error.txt", "w") as error_file:
+            error_file.write("-"+str(e) + "\n")
+        return graph
 
-    return graph
 
 def load_graph_operations():
     try:
