@@ -143,10 +143,13 @@ def add_path(graph_list, labels, path_to_add):
     if algorithm_used == "pc_gcastle" or algorithm_used == "ges_gcastle":
         graph.causal_matrix[node1_index, node2_index] = 1
     elif algorithm_used == "pc_causal":
-        graph.G.graph[node2_index, node1_index] = 1
-        graph.G.graph[node1_index, node2_index] = -1
+        if graph.G.graph[node1_index, node2_index] == 0:
+            graph.G.graph[node2_index, node1_index] = 1
+        graph.G.graph[node1_index, node2_index] = -1   
+
     elif algorithm_used == "ges_causal":
-        graph["G"].graph[node2_index, node1_index] = 1
+        if graph["G"].graph[node1_index, node2_index] == 0:
+            graph["G"].graph[node2_index, node1_index] = 1
         graph["G"].graph[node1_index, node2_index] = -1
 
     return graph
@@ -179,9 +182,17 @@ def delete_path(graph_list, labels, path_to_delete):
     if algorithm_used == "pc_gcastle" or algorithm_used == "ges_gcastle":
         graph.causal_matrix[node1_index, node2_index] = 0
     elif algorithm_used == "pc_causal":
-        graph.G.graph[node1_index, node2_index] = 0
+        if graph.G.graph[node1_index, node2_index] == -1 and graph.G.graph[node2_index, node1_index] == -1: #undirected path
+            graph.G.graph[node1_index, node2_index] = 1
+        else:
+            graph.G.graph[node1_index, node2_index] = 0
+            graph.G.graph[node2_index, node1_index] = 0        
     elif algorithm_used == "ges_causal":
-        graph["G"].graph[node1_index, node2_index] = 0
+        if graph["G"].graph[node1_index, node2_index] == -1 and graph["G"].graph[node2_index, node1_index] == -1: #undirected path
+            graph["G"].graph[node1_index, node2_index] = 1
+        else:
+            graph["G"].graph[node1_index, node2_index] = 0
+            graph["G"].graph[node2_index, node1_index] = 0
 
     return graph
 
