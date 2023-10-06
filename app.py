@@ -8,10 +8,11 @@ import subprocess
 import json
 import pandas as pd
 import pickle
+import shutil
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
-app.config['UPLOAD_FOLDER'] = 'uploads'
+app.config['UPLOAD_FOLDER'] = 'datasets'
 app.config['MAX_CONTENT_PATH'] = 16 * 1000 * 1000
 app.config["IMAGE_UPLOADS"] = "static/"
 app.config["DATASET_FOLDER"] = 'datasets'
@@ -94,10 +95,26 @@ def upload():
 	
 @app.route('/uploader', methods = ['GET', 'POST'])
 def upload_file():
-   if request.method == 'POST':
-      f = request.files['file']
-      f.save(os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(f.filename)))
-      return 'file uploaded successfully'
+    if request.method == 'POST':
+        userdata_folder = os.path.join(app.config['UPLOAD_FOLDER'], "userdata")
+        if not os.path.exists(userdata_folder):
+            os.makedirs(userdata_folder)
+        else:
+            # Clear the contents of the 'userdata' folder
+            for file in os.listdir(userdata_folder):
+                file_path = os.path.join(userdata_folder, file)
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
+        f = request.files['file']
+        # Get the original filename
+        original_filename = secure_filename(f.filename)
+        # Get the file extension
+        file_extension = os.path.splitext(original_filename)[-1]
+        # Rename the uploaded file to 'userdata' with the original extension
+        new_filename = 'userdata' + file_extension
+        filepath = os.path.join(userdata_folder, secure_filename(new_filename))
+        f.save(filepath)
+        return 'file uploaded successfully'
 
 def optional_parameters(form_value):
     try : 
@@ -249,7 +266,7 @@ def run_metrics():
         print_message_metrics = None
         #checking if estimates.txt is not empty
         with open("estimates.txt","r") as estimates_file: 
-            print_message_metrics = "".join(estimates_file.readlines())
+            print_message_metrics = "\n".join(estimates_file.readlines())
         if os.path.exists("estimates.txt"):
         # Open "estimates.txt" in write mode to clear its content
             with open("estimates.txt", "w"):
@@ -330,7 +347,7 @@ def run_data():
 
     dataset_path = app.config['DATASET_FOLDER'] + "\\" + selected_dataset + "\\"
     df = pd.read_csv(dataset_path + selected_dataset + ".csv")
-    summary_stats = df.describe().to_html(classes='table table-striped table-bordered table-sm')
+    summary_stats = df.describe(include="all").append(df.dtypes.rename('data_type')).to_html(classes='table table-striped table-bordered table-sm')
     return render_template('summary.html', summary_stats=summary_stats)  
 
 @app.route('/image', methods=['GET'])
@@ -391,6 +408,9 @@ def logout():
             os.remove(graph_operations)
     except FileNotFoundError:
         pass  
+    userdata_folder = os.path.join(app.config['UPLOAD_FOLDER'], "userdata")
+    if os.path.exists(userdata_folder):
+        shutil.rmtree(userdata_folder)
 
     
 
