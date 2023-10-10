@@ -80,9 +80,9 @@
                               </select>
                           </div>
                           <div class="form-group">
-                              <label class="param-label" for="pc_gcastle_tiers">Tiers:</label>
+                              <label class="param-label" for="pc_gcastle_tiers">Background Knowledge (Tiers):</label>
                               <textarea class="param-input" name="pc_gcastle_tiers" id="pc_gcastle_tiers" rows="3"></textarea>
-                              <small class="form-text text-muted">Enter tiers as a list of lists, e.g., [[income, relationship],[Sex, workclass]].</small>
+                              <small class="form-text text-muted">Enter tiers as a list of lists, e.g. for 2 Tiers with 2 nodes each:<br>[ [node1, node2], [node3, node4] ]</small>
                           </div>
                       </div>
 
@@ -108,9 +108,10 @@
                             <input class="param-input" type="checkbox" name="pc_stable" id="pc_stable">
                         </div>
                         <div class="form-group">
-                          <label class="param-label" for="pc_causal_tiers">Tiers:</label>
+                          <label class="param-label" for="pc_causal_tiers">Background Knowledge (Tiers):</label>
                           <textarea class="param-input" name="pc_causal_tiers" id="pc_causal_tiers" rows="3"></textarea>
-                          <small class="form-text text-muted">Enter tiers as a list of lists, e.g., [[income, relationship],[Sex, workclass]].</small>
+                          <small class="form-text text-muted">Enter tiers as a list of lists, e.g. for 2 Tiers with 2 nodes each:<br>[ [node1, node2], [node3, node4] ]</small>
+
                       </div>
                         <div class="form-group">
                             <label class="param-label" for="pc_uc_rule">UC Rule:</label>
@@ -284,4 +285,9 @@ You are not registered. <a href="/login">login</a>.
           }
       }
     </script>
+     {% if session.popup_message_graph %}
+     <script>
+       alert(`{{ session.popup_message_graph }}`);
+     </script>
+    {% endif %}
 {% endblock %}

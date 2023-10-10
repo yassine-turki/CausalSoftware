@@ -163,3 +163,10 @@ static/image.png
 flask_session/89b3e67d595bc0a699ffa40d67f70d04
 *.pkl
 *.png
+*.pkl
+*.csv
+flask_session/2029240f6d1128be89ddc32729463129
+flask_session/3cc1350c7f43db69ccd7f732ef33260b
+flask_session/f1334e3e3cfa4138afd5a3fec536f7e9
+static/image.png
+*.png

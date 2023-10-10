@@ -48,7 +48,6 @@ from gcastle_graph_generators.ges_gcastle import run_ges_gcastle
 from causal_learn_graph_generators.pc_causal_learn import run_pc_causal_learn
 from causal_learn_graph_generators.ges_causal_learn import run_ges_causal_learn
 
-#import graph_operations
 
 
 
@@ -63,7 +62,7 @@ def draw_graph(graph_list, labels, filename=None):
     graph = graph_list[1]
 
     graph_operations_list = []
-    if sys.argv[3]!=None and len(sys.argv) > 3 and len(sys.argv[3]) > 0:
+    if sys.argv[3]!= None and len(sys.argv) > 3 and len(sys.argv[3]) > 0:
         graph_operations_list = json.loads(sys.argv[3])
 
     if len(graph_operations_list) > 0:
@@ -133,9 +132,17 @@ def add_path(graph_list, labels, path_to_add):
 
     column_to_index = {col: i for i, col in enumerate(labels)}
     if path_to_add[0] not in column_to_index.keys() : 
-        raise ValueError(path_to_add[0]+" variable is not in the data")
+        graph_operations = load_graph_operations()
+        if len(graph_operations)>0:
+            error_op = graph_operations.pop()
+            write_graph_operations(graph_operations)
+        raise ValueError("The variable: "+ path_to_add[0]+ " is not in the graph")
     if path_to_add[1] not in column_to_index.keys():
-        raise ValueError(path_to_add[1]+" variable is not in the data")
+        graph_operations = load_graph_operations()
+        if len(graph_operations)>0:
+            error_op = graph_operations.pop()
+            write_graph_operations(graph_operations)
+        raise ValueError("The variable: "+ path_to_add[1]+ " is not in the graph")
 
     node1_index = column_to_index[path_to_add[0]]
     node2_index = column_to_index[path_to_add[1]]
@@ -168,7 +175,7 @@ def delete_path(graph_list, labels, path_to_delete):
     graph_list: a list containing a string and CausalGraph object
 
     labels: labels of the dataset
-
+ to
     path_to_delete: a list containing two nodes. For example ["Sex","Race"]. This will delete the path from "Sex" to "Race"
 
     """
@@ -178,9 +185,17 @@ def delete_path(graph_list, labels, path_to_delete):
     column_to_index = {col: i for i, col in enumerate(labels)}
 
     if path_to_delete[0] not in column_to_index.keys() : 
-        raise ValueError(path_to_delete[0]+" variable is not in the data")
+        graph_operations = load_graph_operations()
+        if len(graph_operations)>0:
+            error_op = graph_operations.pop()
+            write_graph_operations(graph_operations)
+        raise ValueError("The variable: "+ path_to_delete[0]+ " is not in the graph")
     if path_to_delete[1] not in column_to_index.keys():
-        raise ValueError(path_to_delete[1]+" variable is not in the data")
+        graph_operations = load_graph_operations()
+        if len(graph_operations)>0:
+            error_op = graph_operations.pop()
+            write_graph_operations(graph_operations)
+        raise ValueError("The variable: "+ path_to_delete[1]+ " is not in the graph")
 
     node1_index = column_to_index[path_to_delete[0]]
     node2_index = column_to_index[path_to_delete[1]]
@@ -298,6 +313,11 @@ def parse_tiers(tiers):
         else:
             res += tiers[i]
     res +="]"
+    quote_count = res.count('"')
+
+    # Check if the count is odd and print '0' if it is
+    if quote_count == 0 or quote_count % 2 != 0:
+        raise ValueError("Error with the input for Tiers, please try again using the syntax (here specifying 3 tiers) : [ [element1, element2], [element3], [element4] ]")
     return res
 
 
@@ -328,13 +348,6 @@ try:
         if different_algorithm or different_hyper_parameters or different_dataset: #Checks if the user is not generating a new graph or just changed hyper_parameters
             write_graph_operations([]) #Update graph operations
             sys.argv[3] = None #Set graph operations to None
-            if different_algorithm:
-                print("algo not the same")
-            if different_hyper_parameters:
-                print("not same hyper parameters")
-                print(sys.argv[4:])
-            if different_dataset:
-                print("not same dataset")
             graph_list = None
             graph_exists = False
             try:

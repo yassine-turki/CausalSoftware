@@ -40,26 +40,26 @@
                   <label for="outcome" style = "font-weight: bold;">Outcome:</label><br>
                   <input type="text" id="outcome" name="outcome"><br> 
                   <br>
-                  <label for="estimator" style = "font-weight: bold;">Choose the estimator to compute DE and IE:</label>
+                  <label for="estimator" style = "font-weight: bold;">Choose the estimator to compute NDE and IE:</label>
                   <select name="estimator" id="estimator">
-                    <option value="distance_matching_estimator">distance_matching_estimator</option>
-                    <option value="generalized_linear_model_estimator">generalized_linear_model_estimator</option>
-                    <option value="instrumental_variable_estimator">instrumental_variable_estimator</option>
-                    <option value="linear_regression_estimator">linear_regression_estimator</option>
-                    <option value="propensity_score_matching_estimator">propensity_score_matching_estimator</option>
-                    <option value="propensity_score_stratification_estimator">propensity_score_stratification_estimator</option>
-                    <option value="propensity_score_weighting_estimator">propensity_score_weighting_estimator</option>
-                    <option value="regression_discontinuity_estimator">regression_discontinuity_estimator</option>
+                    <option value="propensity_score_matching_estimator">Propensity Score Matching</option>
+                    <option value="propensity_score_stratification_estimator">Propensity Score Stratification</option>
+                    <option value="propensity_score_weighting_estimator">Propensity Score Weighting</option>
+                    <option value="linear_regression_estimator">Linear Regression</option>
+                    <option value="generalized_linear_model_estimator">Generalized Linear Models</option>
+                    <option value="instrumental_variable_estimator">Instrumental Variable</option>
+                    <option value="regression_discontinuity_estimator">Regression Discontinuity</option>
+                    <option value="distance_matching_estimator">Distance Matching</option>
                   </select>
                   <br><br>
                   <label for="method_name" style = "font-weight: bold;">Choose the estimator to compute ATT, ATC, ATE:</label>
                   <select name="method_name" id="method_name">
                     <option value="backdoor.propensity_score_matching">Propensity Score Matching</option>
                     <option value="backdoor.propensity_score_stratification">Propensity Score Stratification</option>
-                    <option value="backdoor.propensity_score_weighting">Propensity Score-based Inverse Weighting</option>
+                    <option value="backdoor.propensity_score_weighting">Propensity Score Weighting</option>
                     <option value="backdoor.linear_regression">Linear Regression</option>
                     <option value="backdoor.generalized_linear_model">Generalized Linear Models </option>
-                    <option value="iv.instrumental_variable">Instrumental Variables</option>
+                    <option value="iv.instrumental_variable">Instrumental Variable</option>
                     <option value="iv.regression_discontinuity">Regression Discontinuity</option>
                   <br><br>
                   </select>

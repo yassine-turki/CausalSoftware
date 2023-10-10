@@ -1,4 +1,4 @@
-from flask import Flask, render_template, url_for, send_file, request, redirect, session
+from flask import Flask, render_template, url_for, send_file, request, redirect, session, jsonify
 from flask_sqlalchemy  import SQLAlchemy
 from flask_session import Session
 from datetime import datetime
@@ -122,9 +122,6 @@ def optional_parameters(form_value):
             value = request.form.get(form_value)
         else:
             value = request.form[form_value]
-        if form_value == "pc_causal_tiers" or form_value =='pc_gcastle_tiers' :
-            print("this is the tiers")
-            print(value)
         if value == '':
             return 'null'
         else:
@@ -183,6 +180,8 @@ def run_script():
         userdata["graph_operations"] = []
         write_graph_operations(userdata["graph_operations"])
 
+    popup_message_graph = '' # for error popup
+
     selected_starting_edge_add = ''
     selected_ending_edge_add = ''
     selected_starting_edge_delete = ''
@@ -208,7 +207,12 @@ def run_script():
         graph_operations.append(new_operation)
         # Write the modified data back to the pickle file
         write_graph_operations(graph_operations)
-        userdata["graph_operations"] = load_graph_operations()
+    elif selected_starting_edge_add == '' and selected_ending_edge_add != '':
+        popup_message_graph = 'Missing starting node to add path'
+    elif selected_starting_edge_add != '' and selected_ending_edge_add == '':
+        popup_message_graph = 'Missing ending node to add path'
+        
+    
 
 
     if selected_starting_edge_delete != '' and selected_ending_edge_delete != '':
@@ -218,7 +222,13 @@ def run_script():
         graph_operations.append(new_operation)
         # Write the modified data back to the pickle file
         write_graph_operations(graph_operations)
-        userdata["graph_operations"] = load_graph_operations()
+
+    elif selected_starting_edge_delete == '' and selected_ending_edge_delete != '':
+        popup_message_graph = 'Missing starting node to delete path'
+    elif selected_starting_edge_delete != '' and selected_ending_edge_delete == '':
+        popup_message_graph = 'Missing ending node to delete path'
+
+    userdata["graph_operations"] = load_graph_operations()
 
     python_bin = "env\Scripts\python"
     dataset_path = app.config['DATASET_FOLDER'] + "\\" + selected_dataset + "\\"
@@ -248,15 +258,15 @@ def run_script():
         print("Option doesn't exist.")
     
     #Error handling 
-    popup_message_graph = ''
+    
     with open("error.txt","r") as error_file: 
-        popup_message_graph = "".join(error_file.readlines())
+        popup_message_graph += "".join(error_file.readlines())
     # Check if "error.txt" file exists
     if os.path.exists("error.txt"):
         # Open "error.txt" in write mode to clear its content
         with open("error.txt", "w"):
             pass
-    session["popup_message"] = popup_message_graph
+    session["popup_message_graph"] = popup_message_graph
 
     return redirect("/run_script")
 
@@ -348,6 +358,8 @@ def run_data():
     dataset_path = app.config['DATASET_FOLDER'] + "\\" + selected_dataset + "\\"
     df = pd.read_csv(dataset_path + selected_dataset + ".csv")
     summary_stats = df.describe(include="all").append(df.dtypes.rename('data_type')).to_html(classes='table table-striped table-bordered table-sm')
+    # summary_stats = pd.concat([df.describe(include="all").T, df.dtypes.rename('data_type')], axis=1)
+    # summary_stats= summary_stats.to_html(classes='table table-striped table-bordered table-sm')
     return render_template('summary.html', summary_stats=summary_stats)  
 
 @app.route('/image', methods=['GET'])
@@ -374,6 +386,8 @@ def login():
 @app.route("/logout")
 def logout():
     session["name"] = None
+    session["popup_message_graph"] = None
+    session["popup_message"] = None
     graph_generated_by_user = 'graph_list.pkl'
     graph_hyper_parameters = "graph_hyper_parameters.pkl"
     graph_operations = "graph_operations.pkl"
