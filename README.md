@@ -1,5 +1,5 @@
 # CausalSoftware
 
-\begin{verbatim}{
+$\begin{verbatim}{
     print(hello)
-}
+}$
