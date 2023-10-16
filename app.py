@@ -167,8 +167,8 @@ def upload_file():
         file_extension = load_file_extension(original_filename) 
         print("FILE EXTENSION", file_extension)
         if file_extension != ".csv" and file_extension !=".txt":
-            print("Only csv and txt files are supported")
-            popup_message_upload = "Only csv and txt files are supported" # for error popup
+            print("Only csv, txt, and xlsx files are supported")
+            popup_message_upload = "Only csv, txt, and xlsx files are supported" # for error popup
             session["popup_message_upload"] = popup_message_upload
             return redirect("/")
         userdata_folder = os.path.join(app.config['UPLOAD_FOLDER'], "userdata")
