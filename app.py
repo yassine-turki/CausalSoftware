@@ -278,7 +278,8 @@ def run_metrics():
         print_message_metrics = None
         #checking if estimates.txt is not empty
         with open("estimates.txt","r") as estimates_file: 
-            print_message_metrics = "\n".join(estimates_file.readlines())
+            print_message_metrics = "<br>".join(estimates_file.readlines())
+
         if os.path.exists("estimates.txt"):
         # Open "estimates.txt" in write mode to clear its content
             with open("estimates.txt", "w"):

@@ -68,7 +68,7 @@
                 </div>
                 {% if print_message_metrics  %}
                 <div class="form-group mt-3">
-                  {{ print_message_metrics }}
+                  {{ print_message_metrics | safe}}
                </div>
                {% endif %}
              </form>
