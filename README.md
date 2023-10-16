@@ -29,3 +29,9 @@ Then, run the command:
 (env) pip install -r requirements.txt
 ```
 
+4. To launch the app, run the command:
+
+```
+(env) python app.py
+```
+
