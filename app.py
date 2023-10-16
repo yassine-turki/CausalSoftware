@@ -34,9 +34,11 @@ class Todo(db.Model):
 def get_datasets():
     dataset_folder = app.config["DATASET_FOLDER"]
     datasets = []
-
     if os.path.exists(dataset_folder) and os.path.isdir(dataset_folder):
         datasets = [folder for folder in os.listdir(dataset_folder) if os.path.isdir(os.path.join(dataset_folder, folder))]
+        if "userdata" in datasets:
+            datasets.remove("userdata") 
+            datasets.insert(0, "userdata")  # Insert 'userdata' at the beginning of the list
 
     return datasets
 
