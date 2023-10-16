@@ -114,7 +114,7 @@ def upload_file():
         new_filename = 'userdata' + file_extension
         filepath = os.path.join(userdata_folder, secure_filename(new_filename))
         f.save(filepath)
-        return 'file uploaded successfully'
+        return redirect("/")
 
 def optional_parameters(form_value):
     try : 
