@@ -9,6 +9,7 @@ import json
 import pandas as pd
 import pickle
 import shutil
+import sys
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
@@ -41,6 +42,40 @@ def get_datasets():
             datasets.insert(0, "userdata")  # Insert 'userdata' at the beginning of the list
 
     return datasets
+
+
+def locate_python_bin():
+    """
+    returns the location of the python_bin file depending on the user's OS
+    """
+    root_folder_name = "env"
+    python_env = "Scripts"
+    if os.getenv('VIRTUAL_ENV'):
+        # Get the path to the root directory of the virtual environment
+        root_folder_path = os.environ.get('VIRTUAL_ENV')
+        # Extract the name of the last folder
+        root_folder_name = os.path.basename(root_folder_path)
+        print(f"Root folder name: {root_folder_name}")
+    else:
+        print("Not in a virtual environment.")
+
+    if os.name == 'nt':
+        print("Using a Windows system.")
+    elif os.uname().sysname == 'Linux':
+        print("Using Linux")
+        python_env = "bin"
+    elif os.uname().sysname == 'Darwin':
+        print("Using macOS")
+        python_env = "bin"
+    else:
+        print("Using another OS")
+
+    python_bin = root_folder_name+'\\'+ python_env + '\\' + "python"
+    print("python_bin =", python_bin)
+    
+    return python_bin
+
+python_bin = locate_python_bin()
 
 @app.route('/', methods=['GET'])
 def index():
@@ -107,6 +142,7 @@ def upload_file():
                 file_path = os.path.join(userdata_folder, file)
                 if os.path.isfile(file_path):
                     os.remove(file_path)
+
         f = request.files['file']
         # Get the original filename
         original_filename = secure_filename(f.filename)
@@ -232,7 +268,6 @@ def run_script():
 
     userdata["graph_operations"] = load_graph_operations()
 
-    python_bin = "env\Scripts\python"
     dataset_path = app.config['DATASET_FOLDER'] + "\\" + selected_dataset + "\\"
 
     if userdata["algorithm"] == "pc_gcastle":  
@@ -325,7 +360,6 @@ def run_metrics():
     # Write the modified data back to the pickle file
     write_graph_operations(graph_operations)
     userdata["graph_operations"] = load_graph_operations()
-    python_bin = "env\Scripts\python"
     dataset_path = app.config['DATASET_FOLDER'] + "\\" + userdata["dataset"] + "\\"
     
     popup_message_metrics = ''

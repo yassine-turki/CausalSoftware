@@ -465,6 +465,7 @@ newfile = "w"
 try:
     dict_of_estimates = compute_estimates_dowhy(graph_list, dowhy_data, treatment = sys.argv[2], outcome = sys.argv[3], method_name = sys.argv[5])
     with open("estimates.txt", newfile) as estimates_file:
+        estimates_file.write("Treatment = "+ sys.argv[2] + " / Outcome = "+ sys.argv[3] + "\n")
         estimates_file.write(str(dict_of_estimates) + "\n")
         newfile = "a"
 except Exception as e:
