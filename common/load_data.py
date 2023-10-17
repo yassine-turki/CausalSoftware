@@ -20,8 +20,6 @@ def load_and_check_data(data_file_path, dropna=True, drop_objects=True):
         data=pd.read_csv(data_file_path)
     elif file_extension == ".txt":
         data=pd.read_csv(data_file_path, sep = " ")
-    elif file_extension == ".xlsx":
-        data=pd.read_excel(data_file_path)
     cols_containing_nan = []
 
     # Check for NaN values in each column
