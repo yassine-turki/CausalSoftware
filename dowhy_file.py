@@ -470,7 +470,7 @@ try:
         newfile = "a"
 except Exception as e:
     with open("error.txt", newfile) as error_file:
-        error_file.write("-"+str(e) + "\n")
+        error_file.write("- Error in computing ATT, ATC, ATE : " + str(e) + "\n")
         newfile = "a"
 
 #Direct Effect
@@ -481,7 +481,7 @@ try:
         newfile = "a"
 except Exception as e:
     with open("error.txt", newfile) as error_file:
-        error_file.write("-"+str(e) + "\n")
+        error_file.write("- Error in computing NDE : "+str(e) + "\n")
         if newfile == "w":
             newfile = "a"
 
@@ -494,4 +494,4 @@ try:
         newfile = "a"
 except Exception as e:
     with open("error.txt", "a") as error_file:
-        error_file.write("-"+str(e) + "\n")
+        error_file.write("- Error in computing IE : "+str(e) + "\n")

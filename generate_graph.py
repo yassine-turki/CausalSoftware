@@ -136,13 +136,13 @@ def add_path(graph_list, labels, path_to_add):
         if len(graph_operations)>0:
             error_op = graph_operations.pop()
             write_graph_operations(graph_operations)
-        raise ValueError("The variable: "+ path_to_add[0]+ " is not in the graph")
+        raise ValueError("Error in Add Edge function : the variable "+ path_to_add[0]+ " is not in the graph")
     if path_to_add[1] not in column_to_index.keys():
         graph_operations = load_graph_operations()
         if len(graph_operations)>0:
             error_op = graph_operations.pop()
             write_graph_operations(graph_operations)
-        raise ValueError("The variable: "+ path_to_add[1]+ " is not in the graph")
+        raise ValueError("Error in Add Edge function : the variable "+ path_to_add[1]+ " is not in the graph")
 
     node1_index = column_to_index[path_to_add[0]]
     node2_index = column_to_index[path_to_add[1]]
@@ -189,13 +189,13 @@ def delete_path(graph_list, labels, path_to_delete):
         if len(graph_operations)>0:
             error_op = graph_operations.pop()
             write_graph_operations(graph_operations)
-        raise ValueError("The variable: "+ path_to_delete[0]+ " is not in the graph")
+        raise ValueError("Error in Delete Edge function : the variable "+ path_to_delete[0]+ " is not in the graph")
     if path_to_delete[1] not in column_to_index.keys():
         graph_operations = load_graph_operations()
         if len(graph_operations)>0:
             error_op = graph_operations.pop()
             write_graph_operations(graph_operations)
-        raise ValueError("The variable: "+ path_to_delete[1]+ " is not in the graph")
+        raise ValueError("Error in Delete Edge function : the variable "+ path_to_delete[1]+ " is not in the graph")
 
     node1_index = column_to_index[path_to_delete[0]]
     node2_index = column_to_index[path_to_delete[1]]
