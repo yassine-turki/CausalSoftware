@@ -433,7 +433,7 @@ def run_data():
     summary_stats = result.to_html(classes='table table-striped table-bordered table-sm')
     # summary_stats = pd.concat([df.describe(include="all").T, df.dtypes.rename('data_type')], axis=1)
     # summary_stats= summary_stats.to_html(classes='table table-striped table-bordered table-sm')
-    return render_template('summary.html', summary_stats=summary_stats)  
+    return render_template('summary.html', data_name = selected_dataset, summary_stats=summary_stats)  
 
 @app.route('/image', methods=['GET'])
 def get_image():
