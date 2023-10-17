@@ -426,7 +426,11 @@ def run_data():
 
     dataset = locate_dataset(selected_dataset)
     df, _, _ = load_and_check_data(dataset, dropna = False, drop_objects = False)
-    summary_stats = df.describe(include="all").append(df.dtypes.rename('data_type')).to_html(classes='table table-striped table-bordered table-sm')
+    summary = df.describe(include="all")
+    types = df.dtypes.rename('data_type').to_frame().T
+    missing_values = df.isnull().any().rename('missing_values').to_frame().T
+    result = pd.concat([summary, types, missing_values], axis=0, join="outer")
+    summary_stats = result.to_html(classes='table table-striped table-bordered table-sm')
     # summary_stats = pd.concat([df.describe(include="all").T, df.dtypes.rename('data_type')], axis=1)
     # summary_stats= summary_stats.to_html(classes='table table-striped table-bordered table-sm')
     return render_template('summary.html', summary_stats=summary_stats)  

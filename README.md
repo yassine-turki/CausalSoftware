@@ -14,13 +14,19 @@ pip install virtualenv
 2. Go to the local directory where we want to create the app
 
 ```
-virtualenv env
+virtualenv virtualenv_name
 ```
 
 Then, run the command:
 
+For Windows:
 ```
-.\env\Scripts\activate
+.\virtualenv_name\Scripts\activate
+```
+
+For Mac and Linux : 
+```
+source virtualenv_name/bin/activate
 ```
 
 3. Lastly, install the dependencies
