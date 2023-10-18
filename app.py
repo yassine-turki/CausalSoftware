@@ -52,30 +52,13 @@ def locate_python_bin():
     """
     returns the location of the python_bin file depending on the user's OS
     """
-    root_folder_name = "env"
-    python_env = "Scripts"
     if os.getenv('VIRTUAL_ENV'):
-        # Get the path to the root directory of the virtual environment
-        root_folder_path = os.environ.get('VIRTUAL_ENV')
-        # Extract the name of the last folder
-        root_folder_name = os.path.basename(root_folder_path)
-        print(f"Root folder name: {root_folder_name}")
+        virtual_env_path = os.environ.get('VIRTUAL_ENV')
+        python_bin = os.path.relpath(sys.executable, virtual_env_path)
+        print("Python bin in virtual environment:", os.path.join(os.path.basename(virtual_env_path), python_bin))
     else:
         print("Not in a virtual environment.")
-
-    if os.name == 'nt':
-        print("Using a Windows system.")
-    elif os.uname().sysname == 'Linux':
-        print("Using Linux")
-        python_env = "bin"
-    elif os.uname().sysname == 'Darwin':
-        print("Using macOS")
-        python_env = "bin"
-    else:
-        print("Using another OS")
-
-    python_bin = root_folder_name+'\\'+ python_env + '\\' + "python"
-    print("python_bin =", python_bin)
+        python_bin = sys.executable
     
     return python_bin
 
