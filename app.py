@@ -55,7 +55,7 @@ def locate_python_bin():
     if os.getenv('VIRTUAL_ENV'):
         virtual_env_path = os.environ.get('VIRTUAL_ENV')
         python_bin = os.path.relpath(sys.executable, virtual_env_path)
-        print("Python bin in virtual environment:", os.path.join(os.path.basename(virtual_env_path), python_bin))
+        python_bin= os.path.join(os.path.basename(virtual_env_path), python_bin)
     else:
         print("Not in a virtual environment.")
         python_bin = sys.executable
