@@ -143,9 +143,15 @@ def upload():
 @app.route('/uploader', methods = ['GET', 'POST'])
 def upload_file():
     if request.method == 'POST':
+        popup_message_upload = ""
         f = request.files['file']
         # Get the original filename
         original_filename = secure_filename(f.filename)
+        if original_filename == "":
+            print("No file detected, please try again")
+            popup_message_upload = "No file detected, please try again" # for error popup
+            session["popup_message_upload"] = popup_message_upload
+            return redirect("/")
         # Get the file extension
         file_extension = load_file_extension(original_filename) 
         print("FILE EXTENSION", file_extension)
