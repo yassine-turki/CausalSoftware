@@ -16,7 +16,7 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
 app.config['UPLOAD_FOLDER'] = 'datasets'
 app.config['MAX_CONTENT_PATH'] = 16 * 1000 * 1000
-app.config["IMAGE_UPLOADS"] = "static/"
+app.config["IMAGE_UPLOADS"] = "static"
 app.config["DATASET_FOLDER"] = 'datasets'
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
@@ -104,10 +104,10 @@ def index():
     # tasks = Todo.query.order_by(Todo.date_created).all()
     datasets = get_datasets()
     is_image = False
-    if os.path.isfile(app.config["IMAGE_UPLOADS"] + "image.png"):
+    if os.path.isfile(os.path.join(app.config["IMAGE_UPLOADS"], 'image.png')):
         is_image = True
     #print(is_image)
-    return render_template('index.html',uploaded_image = app.config["IMAGE_UPLOADS"] + "image.png", is_image = is_image, datasets = datasets)
+    return render_template('index.html', uploaded_image = os.path.join(app.config["IMAGE_UPLOADS"], 'image.png'), is_image = is_image, datasets = datasets)
 
 @app.route('/delete/<int:id>')
 def delete(id):
@@ -207,7 +207,7 @@ def run_script():
     
     if request.method == 'GET':
         is_image = False
-        if os.path.isfile(app.config["IMAGE_UPLOADS"] + "image.png"):
+        if os.path.isfile(os.path.join(app.config["IMAGE_UPLOADS"], 'image.png')):
             is_image = True
         return render_template("graph.html", is_image = is_image)
     
@@ -426,7 +426,7 @@ def run_data():
 
 @app.route('/image', methods=['GET'])
 def get_image():
-    return send_file(app.config["IMAGE_UPLOADS"] + "image.png", mimetype='image/png')
+    return send_file(os.path.join(app.config["IMAGE_UPLOADS"], 'image.png'), mimetype='image/png')
 
 @app.route("/login", methods=["POST", "GET"])
 def login():
