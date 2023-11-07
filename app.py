@@ -6,11 +6,14 @@ from werkzeug.utils import secure_filename
 from common.load_data import load_and_check_data
 import os
 import subprocess
+import signal
 import json
 import pandas as pd
+import numpy as np
 import pickle
 import shutil
 import sys
+import atexit
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
@@ -32,6 +35,15 @@ class Todo(db.Model):
 
     def __repr__(self):
         return '<Task %r>' % self.id
+
+def shutdown_server():
+    os.kill(os.getpid(), -9)
+    
+def on_exit():
+    print("Flask application is shutting down.")
+    shutdown_server()
+
+atexit.register(on_exit)
     
 def get_datasets():
     dataset_folder = app.config["DATASET_FOLDER"]
@@ -82,8 +94,25 @@ def locate_dataset(selected_dataset):
             break
     return os.path.join(dataset_path, selected_file)
 
-python_bin = locate_python_bin()
 
+def get_data_types(df):
+    """
+    Get the data types of a pandas Data Frame
+    """
+    types = []
+    for column in df.columns:
+        if df[column].dtype == object:
+            types.append('Categorical')
+        elif df[column].dtype == np.float64 or df[column].dtype == np.int64:
+            if df[column].dtype == np.float64 and any(df[column].dropna().apply(lambda x: x.is_integer() == False)):
+                types.append('Continuous')
+            else:
+                types.append('Binary' if len(df[column].dropna().unique()) == 2 else 'Discrete')
+        else:
+            types.append('Unidentified')
+    return pd.DataFrame(types, index=df.columns, columns=['dtype'])
+
+python_bin = locate_python_bin()
 
 
 
@@ -416,12 +445,10 @@ def run_data():
     dataset = locate_dataset(selected_dataset)
     df, _, _ = load_and_check_data(dataset, dropna = False, drop_objects = False)
     summary = df.describe(include="all")
-    types = df.dtypes.rename('data_type').to_frame().T
+    types = get_data_types(df).T
     missing_values = df.isnull().any().rename('missing_values').to_frame().T
     result = pd.concat([summary, types, missing_values], axis=0, join="outer")
     summary_stats = result.to_html(classes='table table-striped table-bordered table-sm')
-    # summary_stats = pd.concat([df.describe(include="all").T, df.dtypes.rename('data_type')], axis=1)
-    # summary_stats= summary_stats.to_html(classes='table table-striped table-bordered table-sm')
     return render_template('summary.html', data_name = selected_dataset, summary_stats=summary_stats)  
 
 @app.route('/image', methods=['GET'])
@@ -494,5 +521,5 @@ def logout():
     return redirect("/")
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, use_reloader = False)
 
