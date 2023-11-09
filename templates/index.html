@@ -290,4 +290,9 @@ You are not registered. <a href="/login">login</a>.
        alert(`{{ session.popup_message_graph }}`);
      </script>
     {% endif %}
+    {% if session.popup_message_upload %}
+    <script>
+    alert("{{ session.popup_message_upload }}");
+    </script>
+    {% endif %}
 {% endblock %}

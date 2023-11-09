@@ -465,11 +465,12 @@ newfile = "w"
 try:
     dict_of_estimates = compute_estimates_dowhy(graph_list, dowhy_data, treatment = sys.argv[2], outcome = sys.argv[3], method_name = sys.argv[5])
     with open("estimates.txt", newfile) as estimates_file:
+        estimates_file.write("Treatment = "+ sys.argv[2] + " / Outcome = "+ sys.argv[3] + "\n")
         estimates_file.write(str(dict_of_estimates) + "\n")
         newfile = "a"
 except Exception as e:
     with open("error.txt", newfile) as error_file:
-        error_file.write("-"+str(e) + "\n")
+        error_file.write("- Error in computing ATT, ATC, ATE : " + str(e) + "\n")
         newfile = "a"
 
 #Direct Effect
@@ -480,7 +481,7 @@ try:
         newfile = "a"
 except Exception as e:
     with open("error.txt", newfile) as error_file:
-        error_file.write("-"+str(e) + "\n")
+        error_file.write("- Error in computing NDE : "+str(e) + "\n")
         if newfile == "w":
             newfile = "a"
 
@@ -493,4 +494,4 @@ try:
         newfile = "a"
 except Exception as e:
     with open("error.txt", "a") as error_file:
-        error_file.write("-"+str(e) + "\n")
+        error_file.write("- Error in computing IE : "+str(e) + "\n")

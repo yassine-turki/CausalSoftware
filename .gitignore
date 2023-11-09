@@ -160,7 +160,7 @@ cython_debug/
 #.idea/
 static/image.png
 *.pkl
-flask_session/89b3e67d595bc0a699ffa40d67f70d04
+flask_session/*
 *.png
 *.csv
 flask_session/2029240f6d1128be89ddc32729463129

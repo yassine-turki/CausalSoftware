@@ -3,18 +3,23 @@ from flask_sqlalchemy  import SQLAlchemy
 from flask_session import Session
 from datetime import datetime
 from werkzeug.utils import secure_filename
+from common.load_data import load_and_check_data
 import os
 import subprocess
+import signal
 import json
 import pandas as pd
+import numpy as np
 import pickle
 import shutil
+import sys
+import atexit
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
 app.config['UPLOAD_FOLDER'] = 'datasets'
 app.config['MAX_CONTENT_PATH'] = 16 * 1000 * 1000
-app.config["IMAGE_UPLOADS"] = "static/"
+app.config["IMAGE_UPLOADS"] = "static"
 app.config["DATASET_FOLDER"] = 'datasets'
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
@@ -30,6 +35,15 @@ class Todo(db.Model):
 
     def __repr__(self):
         return '<Task %r>' % self.id
+
+def shutdown_server():
+    os.kill(os.getpid(), -9)
+    
+def on_exit():
+    print("Flask application is shutting down.")
+    shutdown_server()
+
+atexit.register(on_exit)
     
 def get_datasets():
     dataset_folder = app.config["DATASET_FOLDER"]
@@ -41,6 +55,66 @@ def get_datasets():
             datasets.insert(0, "userdata")  # Insert 'userdata' at the beginning of the list
 
     return datasets
+
+def load_file_extension(data_file_path):
+    file_extension = os.path.splitext(data_file_path)[-1]
+    return file_extension
+
+def locate_python_bin():
+    """
+    returns the location of the python_bin file depending on the user's OS
+    """
+    if os.getenv('VIRTUAL_ENV'):
+        virtual_env_path = os.environ.get('VIRTUAL_ENV')
+        python_bin = os.path.relpath(sys.executable, virtual_env_path)
+        python_bin= os.path.join(os.path.basename(virtual_env_path), python_bin)
+    else:
+        print("Not in a virtual environment.")
+        python_bin = sys.executable
+    
+    return python_bin
+
+def locate_dataset(selected_dataset):
+
+    dataset_folder = app.config['DATASET_FOLDER']
+    dataset_path = os.path.join(dataset_folder, selected_dataset)
+
+    # List files in the dataset folder
+    # List all subdirectories within the dataset folder
+    subdirectories = [f for f in os.listdir(dataset_folder) if os.path.isdir(os.path.join(dataset_folder, f))]
+    selected_file = None
+    for subdir in subdirectories:
+        # List files in each subdirectory
+        files_in_subdir = [f for f in os.listdir(os.path.join(dataset_folder, subdir)) if os.path.isfile(os.path.join(dataset_folder, subdir, f))]
+
+        # Filter the file with a name that matches the selected dataset
+        selected_file = next((f for f in files_in_subdir if selected_dataset in f), None)
+
+        if selected_file:
+            break
+    return os.path.join(dataset_path, selected_file)
+
+
+def get_data_types(df):
+    """
+    Get the data types of a pandas Data Frame
+    """
+    types = []
+    for column in df.columns:
+        if df[column].dtype == object:
+            types.append('Categorical')
+        elif df[column].dtype == np.float64 or df[column].dtype == np.int64:
+            if df[column].dtype == np.float64 and any(df[column].dropna().apply(lambda x: x.is_integer() == False)):
+                types.append('Continuous')
+            else:
+                types.append('Binary' if len(df[column].dropna().unique()) == 2 else 'Discrete')
+        else:
+            types.append('Unidentified')
+    return pd.DataFrame(types, index=df.columns, columns=['dtype'])
+
+python_bin = locate_python_bin()
+
+
 
 @app.route('/', methods=['GET'])
 def index():
@@ -59,10 +133,9 @@ def index():
     # tasks = Todo.query.order_by(Todo.date_created).all()
     datasets = get_datasets()
     is_image = False
-    if os.path.isfile(app.config["IMAGE_UPLOADS"] + "image.png"):
+    if os.path.isfile(os.path.join(app.config["IMAGE_UPLOADS"], "image.png")):
         is_image = True
-    #print(is_image)
-    return render_template('index.html',uploaded_image = app.config["IMAGE_UPLOADS"] + "image.png", is_image = is_image, datasets = datasets)
+    return render_template('index.html', uploaded_image = os.path.join(app.config["IMAGE_UPLOADS"], "image.png"), is_image = is_image, datasets = datasets)
 
 @app.route('/delete/<int:id>')
 def delete(id):
@@ -98,6 +171,23 @@ def upload():
 @app.route('/uploader', methods = ['GET', 'POST'])
 def upload_file():
     if request.method == 'POST':
+        popup_message_upload = ""
+        f = request.files['file']
+        # Get the original filename
+        original_filename = secure_filename(f.filename)
+        if original_filename == "":
+            print("No file detected, please try again")
+            popup_message_upload = "No file detected, please try again" # for error popup
+            session["popup_message_upload"] = popup_message_upload
+            return redirect("/")
+        # Get the file extension
+        file_extension = load_file_extension(original_filename) 
+        print("FILE EXTENSION", file_extension)
+        if file_extension != ".csv" and file_extension !=".txt":
+            print("Only csv and txt files are supported")
+            popup_message_upload = "Only csv and txt files are supported" # for error popup
+            session["popup_message_upload"] = popup_message_upload
+            return redirect("/")
         userdata_folder = os.path.join(app.config['UPLOAD_FOLDER'], "userdata")
         if not os.path.exists(userdata_folder):
             os.makedirs(userdata_folder)
@@ -107,11 +197,6 @@ def upload_file():
                 file_path = os.path.join(userdata_folder, file)
                 if os.path.isfile(file_path):
                     os.remove(file_path)
-        f = request.files['file']
-        # Get the original filename
-        original_filename = secure_filename(f.filename)
-        # Get the file extension
-        file_extension = os.path.splitext(original_filename)[-1]
         # Rename the uploaded file to 'userdata' with the original extension
         new_filename = 'userdata' + file_extension
         filepath = os.path.join(userdata_folder, secure_filename(new_filename))
@@ -147,9 +232,10 @@ def write_graph_operations(graph_operations):
 
 @app.route('/run_script', methods=['GET', 'POST'])
 def run_script():
+    
     if request.method == 'GET':
         is_image = False
-        if os.path.isfile(app.config["IMAGE_UPLOADS"] + "image.png"):
+        if os.path.isfile(os.path.join(app.config["IMAGE_UPLOADS"], "image.png")):
             is_image = True
         return render_template("graph.html", is_image = is_image)
     
@@ -159,7 +245,7 @@ def run_script():
     if session["name"] not in app.config["userdata"]:
         #Initializing the userdata object for the current user
         app.config["userdata"][session["name"]] = {}
-
+    
     userdata = app.config["userdata"][session["name"]]
 
     if 'datasets' in request.form:
@@ -181,6 +267,8 @@ def run_script():
     if "graph_operations" not in userdata:
         userdata["graph_operations"] = []
         write_graph_operations(userdata["graph_operations"])
+    
+    print("selected dataset : ",userdata["dataset"] )
 
     popup_message_graph = '' # for error popup
 
@@ -213,9 +301,6 @@ def run_script():
         popup_message_graph = 'Missing starting node to add path'
     elif selected_starting_edge_add != '' and selected_ending_edge_add == '':
         popup_message_graph = 'Missing ending node to add path'
-        
-    
-
 
     if selected_starting_edge_delete != '' and selected_ending_edge_delete != '':
         graph_operations = load_graph_operations()
@@ -232,21 +317,20 @@ def run_script():
 
     userdata["graph_operations"] = load_graph_operations()
 
-    python_bin = "env\Scripts\python"
-    dataset_path = app.config['DATASET_FOLDER'] + "\\" + selected_dataset + "\\"
+    dataset_path = locate_dataset(selected_dataset)
 
     if userdata["algorithm"] == "pc_gcastle":  
         pc_tiers = optional_parameters("pc_gcastle_tiers")
-        subprocess.Popen([python_bin, 'generate_graph.py', dataset_path + userdata["dataset"] + ".csv", "pc_gcastle", json.dumps(userdata["graph_operations"]), optional_parameters("pc_variant"), optional_parameters("pc_alpha"), optional_parameters("pc_ci_test"), pc_tiers]).wait()
+        subprocess.Popen([python_bin, 'generate_graph.py', dataset_path, "pc_gcastle", json.dumps(userdata["graph_operations"]), optional_parameters("pc_variant"), optional_parameters("pc_alpha"), optional_parameters("pc_ci_test"), pc_tiers]).wait()
 
 
     elif userdata["algorithm"] == "pc_causal":
 
         pc_tiers = optional_parameters("pc_causal_tiers")
-        subprocess.Popen([python_bin, 'generate_graph.py', dataset_path + userdata["dataset"] + ".csv", "pc_causal", json.dumps(userdata["graph_operations"]), optional_parameters("pc_alpha_cl"), optional_parameters("pc_indep_test"), json.dumps(optional_parameters("pc_stable")), optional_parameters("pc_uc_rule"), optional_parameters("pc_uc_priority"), json.dumps(optional_parameters("pc_mvpc")), optional_parameters("pc_correction_name"), pc_tiers]).wait()
+        subprocess.Popen([python_bin, 'generate_graph.py', dataset_path, "pc_causal", json.dumps(userdata["graph_operations"]), optional_parameters("pc_alpha_cl"), optional_parameters("pc_indep_test"), json.dumps(optional_parameters("pc_stable")), optional_parameters("pc_uc_rule"), optional_parameters("pc_uc_priority"), json.dumps(optional_parameters("pc_mvpc")), optional_parameters("pc_correction_name"), pc_tiers]).wait()
 
     elif userdata["algorithm"] == "ges_gcastle":
-        subprocess.Popen([python_bin, 'generate_graph.py', dataset_path + userdata["dataset"] + ".csv", "ges_gcastle", json.dumps(userdata["graph_operations"]), optional_parameters("ges_criterion"), optional_parameters("ges_method"), optional_parameters("ges_k"), optional_parameters("ges_N")]).wait()
+        subprocess.Popen([python_bin, 'generate_graph.py', dataset_path, "ges_gcastle", json.dumps(userdata["graph_operations"]), optional_parameters("ges_criterion"), optional_parameters("ges_method"), optional_parameters("ges_k"), optional_parameters("ges_N")]).wait()
 
     elif userdata["algorithm"] == "ges_causal":
 
@@ -254,7 +338,7 @@ def run_script():
         ges_parameters_kfold = optional_parameters("ges_parameters_kfold")
         ges_parameters_lambda = optional_parameters("ges_parameters_lambda")
         ges_parameters_dlabel = optional_parameters("ges_parameters_dlabel")
-        subprocess.Popen([python_bin, 'generate_graph.py', dataset_path + userdata["dataset"] + ".csv", "ges_causal", json.dumps(userdata["graph_operations"]), optional_parameters("ges_score_func"), ges_maxP, ges_parameters_kfold, ges_parameters_lambda, ges_parameters_dlabel]).wait()
+        subprocess.Popen([python_bin, 'generate_graph.py', dataset_path , "ges_causal", json.dumps(userdata["graph_operations"]), optional_parameters("ges_score_func"), ges_maxP, ges_parameters_kfold, ges_parameters_lambda, ges_parameters_dlabel]).wait()
 
     else:
         print("Option doesn't exist.")
@@ -325,13 +409,11 @@ def run_metrics():
     # Write the modified data back to the pickle file
     write_graph_operations(graph_operations)
     userdata["graph_operations"] = load_graph_operations()
-    python_bin = "env\Scripts\python"
-    dataset_path = app.config['DATASET_FOLDER'] + "\\" + userdata["dataset"] + "\\"
     
     popup_message_metrics = ''
-
+    dataset_path = locate_dataset(userdata["dataset"])
     if userdata["library_metrics"] == "dowhy":    
-        proc = subprocess.Popen([python_bin, 'dowhy_file.py', dataset_path + userdata["dataset"] + ".csv", userdata["treatment"], userdata["outcome"], userdata["estimator"], userdata["method_name"]])
+        proc = subprocess.Popen([python_bin, 'dowhy_file.py', dataset_path, userdata["treatment"], userdata["outcome"], userdata["estimator"], userdata["method_name"]])
         proc.wait()
         with open("error.txt","r") as error_file: 
             popup_message_metrics = "".join(error_file.readlines())
@@ -346,6 +428,7 @@ def run_metrics():
 
     return redirect("/run_metrics")
 
+
 @app.route('/run_data', methods = ['POST', 'GET'])
 def run_data():
     userdata = app.config["userdata"][session["name"]]
@@ -358,16 +441,19 @@ def run_data():
     else:
         selected_dataset = userdata["dataset"]
 
-    dataset_path = app.config['DATASET_FOLDER'] + "\\" + selected_dataset + "\\"
-    df = pd.read_csv(dataset_path + selected_dataset + ".csv")
-    summary_stats = df.describe(include="all").append(df.dtypes.rename('data_type')).to_html(classes='table table-striped table-bordered table-sm')
-    # summary_stats = pd.concat([df.describe(include="all").T, df.dtypes.rename('data_type')], axis=1)
-    # summary_stats= summary_stats.to_html(classes='table table-striped table-bordered table-sm')
-    return render_template('summary.html', summary_stats=summary_stats)  
+    dataset = locate_dataset(selected_dataset)
+    df, _, _ = load_and_check_data(dataset, dropna = False, drop_objects = False)
+    summary = df.describe(include="all")
+    types = get_data_types(df).T
+    missing_values = df.isnull().any().rename('missing_values').to_frame().T
+    result = pd.concat([summary, types, missing_values], axis=0, join="outer")
+    summary_stats = result.to_html(classes='table table-striped table-bordered table-sm')
+    return render_template('summary.html', data_name = selected_dataset, summary_stats=summary_stats)  
 
 @app.route('/image', methods=['GET'])
 def get_image():
-    return send_file(app.config["IMAGE_UPLOADS"] + "image.png", mimetype='image/png')
+    image_path = os.path.join(app.config["IMAGE_UPLOADS"], "image.png")
+    return send_file(image_path, mimetype='image/png')
 
 @app.route("/login", methods=["POST", "GET"])
 def login():
@@ -391,6 +477,7 @@ def logout():
     session["name"] = None
     session["popup_message_graph"] = None
     session["popup_message"] = None
+    session["popup_message_upload"] = None
     graph_generated_by_user = 'graph_list.pkl'
     graph_hyper_parameters = "graph_hyper_parameters.pkl"
     graph_operations = "graph_operations.pkl"
@@ -434,5 +521,5 @@ def logout():
     return redirect("/")
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, use_reloader = False)
 

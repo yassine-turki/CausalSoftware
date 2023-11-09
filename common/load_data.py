@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import os
 
 def load_and_check_data(data_file_path, dropna=True, drop_objects=True):
     """
@@ -10,9 +11,15 @@ def load_and_check_data(data_file_path, dropna=True, drop_objects=True):
     dropna: bool to indicate if we drop all NaN values. default: False
     drop_objects: bool to indicate if we drop all non numerical data. default: False
 
+    Supports txt files, xlsx files and csv files
+
     """
 
-    data=pd.read_csv(data_file_path)
+    file_extension = os.path.splitext(data_file_path)[-1]
+    if file_extension == ".csv":
+        data=pd.read_csv(data_file_path)
+    elif file_extension == ".txt":
+        data=pd.read_csv(data_file_path, sep = " ")
     cols_containing_nan = []
 
     # Check for NaN values in each column
