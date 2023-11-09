@@ -26,13 +26,18 @@ def load_and_check_data(data_file_path, dropna=True, drop_objects=True):
     for col in data.columns:
         if data[col].isnull().any():
             cols_containing_nan.append(col)
+
+         # if we have columns that are made of 1 and 2, make them binary 
+        if len(data[col].dropna().unique()) == 2 and set(data[col].dropna().unique()) == {1, 2}:
+            data[col] = data[col].apply(lambda x: 0 if x == 1 else (1 if x == 2 else x))
+
     if len(cols_containing_nan) !=0:
         print("Columns with missing values:", cols_containing_nan)
         if dropna==True:
             missing_values_per_row = data.isnull().sum(axis=1)
             # Count how many rows have missing values
             rows_with_missing_values = len(missing_values_per_row[missing_values_per_row > 0])
-            print("Dropping:"+rows_with_missing_values+ "rows containing missing values")
+            print("Dropping:"+str(rows_with_missing_values)+ "rows containing missing values")
             data=data.dropna()
 
     #Check for non numerical data:
@@ -45,5 +50,8 @@ def load_and_check_data(data_file_path, dropna=True, drop_objects=True):
         else:
             print("Dropping object type columns:", object_columns)
             data=data.drop(columns=object_columns)
+
+   
+    
 
     return data, data.values, data.columns
