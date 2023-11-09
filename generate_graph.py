@@ -397,8 +397,8 @@ try:
         graph_hyper_parameters = sys.argv[4:]
         with open('graph_hyper_parameters.pkl', 'wb') as pickle_file:
             pickle.dump(graph_hyper_parameters, pickle_file)
-
-    draw_graph(graph_list, labels, "static\image.png")
+    img_path = os.path.join("static", "image.png")
+    draw_graph(graph_list, labels, img_path)
     # Save graph_list to a pickle file
     with open('graph_list.pkl', 'wb') as pickle_file:
         pickle.dump(graph_list, pickle_file)
