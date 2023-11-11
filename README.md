@@ -2,6 +2,7 @@
 
 
 ## Getting started
+### Using virtualenv
 
 1. Install the virtual environment
 
@@ -33,5 +34,31 @@ source virtualenv_name/bin/activate
 
 ```
 (env) pip install -r requirements.txt
+
+```
+
+### Using conda:
+
+1. First we create a virtual environment using conda (if conda not installed, use this link https://conda.io/projects/conda/en/latest/user-guide/install/index.html)
+
+```
+conda create env_name python=3.10
+```
+2. We activate the environment:
+```
+
+conda activate env_name
+```
+
+3. Lastly, install the dependencies using either
+
+```
+conda install --yes --file requirements.txt
+```
+
+or 
+
+```
+pip install -r requirements.txt
 ```
 
