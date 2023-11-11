@@ -37,7 +37,7 @@ class Todo(db.Model):
         return '<Task %r>' % self.id
 
 def shutdown_server():
-    os.kill(os.getpid(), -9)
+    os.kill(os.getpid(), 9)
     
 def on_exit():
     print("Flask application is shutting down.")
