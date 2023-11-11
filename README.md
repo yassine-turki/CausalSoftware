@@ -34,7 +34,6 @@ source virtualenv_name/bin/activate
 
 ```
 (env) pip install -r requirements.txt
-
 ```
 
 ### Using conda:
@@ -46,7 +45,6 @@ conda create env_name python=3.10
 ```
 2. We activate the environment:
 ```
-
 conda activate env_name
 ```
 
