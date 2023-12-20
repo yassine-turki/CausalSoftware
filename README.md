@@ -36,6 +36,7 @@ source virtualenv_name/bin/activate
 (env) pip install -r requirements.txt
 ```
 
+
 ### Using conda:
 
 1. First we create a virtual environment using conda (if conda not installed, use this link https://conda.io/projects/conda/en/latest/user-guide/install/index.html)
@@ -58,5 +59,11 @@ or
 
 ```
 pip install -r requirements.txt
+=======
+4. To launch the app, run the command:
+
+```
+(env) python app.py
+
 ```
 
