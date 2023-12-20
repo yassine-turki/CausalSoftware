@@ -59,11 +59,11 @@ or
 
 ```
 pip install -r requirements.txt
-=======
+```
+
 4. To launch the app, run the command:
 
 ```
 (env) python app.py
-
 ```
 
