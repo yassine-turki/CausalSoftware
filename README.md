@@ -39,7 +39,7 @@ source virtualenv_name/bin/activate
 
 ### Using conda:
 
-1. First we create a virtual environment using conda (if conda not installed, use this link https://conda.io/projects/conda/en/latest/user-guide/install/index.html)
+1. First we create a virtual environment using conda. If conda not installed, use this link : https://conda.io/projects/conda/en/latest/user-guide/install/index.html
 
 ```
 conda create env_name python=3.10
